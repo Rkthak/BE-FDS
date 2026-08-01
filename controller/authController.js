@@ -1,9 +1,33 @@
+const User = require("../model/user");
+const bcrypt = require("bcrypt");
+const { SALT_ROUNDS } = require("../utils/config");
+
 const authController = {
-  register: (request, response) => {
+  register: async (request, response) => {
     try {
-      response.status(200).json({ message: "user register successfull" });
+      const { userName, email, password } = request.body;
+
+      const existingUser = await User.findOne({ email });
+
+      if (existingUser) {
+        return response.status(409).json({ message: "user already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, Number(SALT_ROUNDS));
+
+      const newUser = new User({
+        userName,
+        email,
+        password: hashedPassword,
+      });
+
+      await newUser.save();
+
+      response.status(201).json({ message: "user register successfull" });
     } catch (error) {
-      response.status(500).json({ message: "error registering user." });
+      response
+        .status(500)
+        .json({ message: "error registering user.", err: error.message });
     }
   },
   login: (request, response) => {
