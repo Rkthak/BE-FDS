@@ -77,11 +77,33 @@ const authController = {
         .json({ message: "error login user", err: error.message });
     }
   },
-  me: (request, response) => {
+  me: async (request, response) => {
     try {
-      response.status(200).json({ user: "user" });
+      const token = request.cookies && request.cookies?.token;
+
+      if (!token) {
+        return response
+          .status(401)
+          .json({ message: "User is not authenticated" });
+      }
+
+      const decoded = await jwt.verify(token, JWT_SECRET);
+
+      const userID = decoded.userID;
+
+      const existingUser = await User.findById(userID).select("-password -__v");
+
+      if (!existingUser) {
+        return response
+          .status(400)
+          .json({ message: "Invalid email or user does not exist" });
+      }
+
+      response.status(200).json({ existingUser });
     } catch (error) {
-      response.status(500).json({ message: "error getting user." });
+      response
+        .status(500)
+        .json({ message: "error getting user", err: error.message });
     }
   },
 };
