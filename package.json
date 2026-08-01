@@ -1,0 +1,41 @@
+{
+  "name": "be-fds",
+  "version": "1.0.0",
+  "description": "Backend API for FoodRush, a MERN food delivery platform featuring authentication, restaurant management, menu management, order tracking, payment integration, and delivery scheduling.",
+  "keywords": [
+    "food-delivery",
+    "food-ordering",
+    "nodejs",
+    "express",
+    "mongodb",
+    "jwt-authentication",
+    "rest-api",
+    "payment-gateway",
+    "online-payment",
+    "order-tracking",
+    "delivery-scheduling",
+    "restaurant-management",
+    "menu-management",
+    "customer-reviews",
+    "ecommerce"
+  ],
+  "homepage": "https://github.com/Rkthak/BE-FDS#readme",
+  "bugs": {
+    "url": "https://github.com/Rkthak/BE-FDS/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rkthak/BE-FDS.git"
+  },
+  "license": "ISC",
+  "author": "Raj Kumar",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.9.0"
+  }
+}
