@@ -79,25 +79,9 @@ const authController = {
   },
   me: async (request, response) => {
     try {
-      const token = request.cookies && request.cookies?.token;
-
-      if (!token) {
-        return response
-          .status(401)
-          .json({ message: "User is not authenticated" });
-      }
-
-      const decoded = await jwt.verify(token, JWT_SECRET);
-
-      const userID = decoded.userID;
+      const userID = request.userID;
 
       const existingUser = await User.findById(userID).select("-password -__v");
-
-      if (!existingUser) {
-        return response
-          .status(400)
-          .json({ message: "Invalid email or user does not exist" });
-      }
 
       response.status(200).json({ existingUser });
     } catch (error) {
