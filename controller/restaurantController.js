@@ -60,10 +60,9 @@ const restaurantController = {
   },
   getRestaurants: async (request, response) => {
     try {
-      const restaurants = await Restaurant.find().populate(
-        "ownerId",
-        "userName email profileImage",
-      );
+      const restaurants = await Restaurant.find()
+        .select("-__v")
+        .populate("ownerId", "userName email profileImage");
 
       response.status(200).json({ restaurants });
     } catch (error) {
@@ -76,10 +75,9 @@ const restaurantController = {
     try {
       const { slugID } = request.params;
 
-      const restaurant = await Restaurant.findOne({ slug: slugID }).populate(
-        "ownerId",
-        "userName email profileImage",
-      );
+      const restaurant = await Restaurant.findOne({ slug: slugID })
+        .select("-__v")
+        .populate("ownerId", "userName email profileImage");
 
       if (!restaurant) {
         return response.status(400).json({ message: "restaurant not found" });
