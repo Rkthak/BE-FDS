@@ -83,7 +83,11 @@ const authController = {
 
       const existingUser = await User.findById(userID).select("-password -__v");
 
-      response.status(200).json({ existingUser });
+      if (!existingUser) {
+        return response.status(404).json({ message: "no user found" });
+      }
+
+      response.status(200).json(existingUser || null);
     } catch (error) {
       response
         .status(500)
