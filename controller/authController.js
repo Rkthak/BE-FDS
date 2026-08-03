@@ -90,6 +90,22 @@ const authController = {
         .json({ message: "error getting user", err: error.message });
     }
   },
+  logout: async (request, response) => {
+    try {
+      response.clearCookie("token", {
+        httpOnly: true,
+        secure: ENV === "production", // set secure flag only in production
+        sameSite: ENV === "production" ? "none" : "lax", // set sameSite flag based on environment
+        maxAge: 1000 * 60 * 60, // set cookie expiration time to 1 hour
+      });
+
+      response.status(200).json({ message: "user logged out!" });
+    } catch (error) {
+      response
+        .status(500)
+        .json({ message: "error logging out user", err: error.message });
+    }
+  },
 };
 
 module.exports = authController;
