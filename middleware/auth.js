@@ -18,6 +18,28 @@ const auth = {
 
     next();
   },
+  allowRoles: (roles) => {
+    return async (request, response, next) => {
+      const userID = request.userID;
+
+      const existingUser = await User.findById(userID).select("-password -__v");
+
+      if (!existingUser) {
+        return response.status(404).json({ message: "User not found" });
+      }
+
+      if (!roles.includes(existingUser.role)) {
+        return response.status(403).json({
+          message:
+            "You do not have the required role(s) to access this resource",
+        });
+      }
+
+      request.user = existingUser;
+
+      next();
+    };
+  },
 };
 
 module.exports = auth;

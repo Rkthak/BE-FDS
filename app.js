@@ -2,6 +2,7 @@ const express = require("express");
 const authRouter = require("./router/authRouter");
 const cookieParser = require("cookie-parser");
 const restaurantRouter = require("./router/restaurantRouter");
+const adminRouter = require("./router/adminRouter");
 
 const app = express();
 
@@ -10,5 +11,6 @@ app.use(express.json());
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/restaurant", restaurantRouter);
+app.use("/api/v1/admin", adminRouter);
 
 module.exports = app;

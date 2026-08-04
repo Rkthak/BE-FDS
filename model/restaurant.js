@@ -150,7 +150,7 @@ const restaurantSchema = new mongoose.Schema(
 
     isOpen: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     rejectionReason: {
       type: String,

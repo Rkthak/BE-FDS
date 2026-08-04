@@ -1,4 +1,7 @@
+const mongoose = require("mongoose");
 const Restaurant = require("../model/restaurant");
+const User = require("../model/user");
+const generateSlug = require("../utils/generateSlug");
 
 const restaurantController = {
   createRestaurant: async (request, response) => {
@@ -15,19 +18,16 @@ const restaurantController = {
         minimumOrder,
       } = request.body;
 
-      let slugedName = restaurantName.toLowerCase().trim().replaceAll(" ", "-"); // for uniquely handle if duplicate restaurant names !!
+      const existingPhoneNumber = await Restaurant.findOne({ phoneNumber });
 
-      const existingSlug = await Restaurant.findOne({ slug: slugedName });
-
-      const generateRandom = () => {
-        return Math.floor(Math.random() * 1e4);
-      };
-
-      if (existingSlug) {
-        const unique = generateRandom();
-
-        slugedName = slugedName + "-" + unique;
+      if (existingPhoneNumber) {
+        return response.status(409).json({
+          message:
+            "This phone number is already registered with another restaurant.",
+        });
       }
+
+      let slug = await generateSlug(restaurantName, Restaurant);
 
       const newRestaurant = new Restaurant({
         restaurantName,
@@ -39,32 +39,38 @@ const restaurantController = {
         deliveryTime,
         deliveryFee,
         minimumOrder,
-        slug: slugedName,
+        slug,
         ownerId: request.userID,
       });
 
       const savedRestaurant = await newRestaurant.save();
 
-      // delete the __v property from the savedCompany object
       const { __v, ...result } = savedRestaurant.toObject();
 
       response.status(201).json({
-        message: "restaurant registered successfully! Waiting for approval.",
+        message: "Restaurant registered successfully! Waiting for approval.",
         result,
       });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error creating restaurent.", err: error.message });
+      response.status(500).json({
+        message: "Error creating restaurant.",
+        err: error.message,
+      });
     }
   },
   getRestaurants: async (request, response) => {
     try {
-      const restaurants = await Restaurant.find()
-        .select("-__v")
-        .populate("ownerId", "userName email profileImage");
+      const restaurants = await Restaurant.find({
+        status: "approved",
+        isOpen: true,
+      }).select("-__v -ownerId");
 
-      response.status(200).json({ restaurants });
+      response.status(200).json({
+        message: restaurants.length
+          ? "Restaurants fetched successfully."
+          : "No restaurants are available at the moment.",
+        restaurants,
+      });
     } catch (error) {
       response
         .status(500)
@@ -75,17 +81,154 @@ const restaurantController = {
     try {
       const { slugID } = request.params;
 
-      const restaurant = await Restaurant.findOne({ slug: slugID })
-        .select("-__v")
-        .populate("ownerId", "userName email profileImage");
+      const restaurant = await Restaurant.findOne({
+        slug: slugID,
+        status: "approved",
+        isOpen: true,
+      }).select("-__v");
 
       if (!restaurant) {
         return response.status(400).json({ message: "restaurant not found" });
       }
 
-      response.status(200).json({ restaurant });
+      response.status(200).json(restaurant);
     } catch (error) {
-      return response.status(500).json({ message: "error getting restaurant" });
+      return response
+        .status(500)
+        .json({ message: "error getting restaurant", err: error.message });
+    }
+  },
+  getMyRestaurant: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const restaurant = await Restaurant.find({ ownerId: userID });
+
+      if (!restaurant || restaurant.length == 0) {
+        return response.status(404).json({
+          message: "you haven't applied to become a restaurant yet.",
+        });
+      }
+
+      response.status(200).json(restaurant);
+    } catch (error) {
+      return response
+        .status(500)
+        .json({ message: "error getting restaurant", err: error.message });
+    }
+  },
+  updateMyRestaurant: async (request, response) => {
+    try {
+      const { slugID } = request.params;
+      const userID = request.userID;
+      const {
+        restaurantName,
+        description,
+        phoneNumber,
+        cuisine,
+        address,
+        openingHours,
+        deliveryTime,
+        deliveryFee,
+        minimumOrder,
+        isOpen,
+      } = request.body;
+
+      const restaurant = await Restaurant.findOne({
+        slug: slugID,
+        ownerId: userID,
+      });
+
+      if (!restaurant) {
+        return response.status(404).json({
+          message: "Restaurant not found or you don't have permission.",
+        });
+      }
+
+      if (
+        restaurantName &&
+        restaurant.restaurantName !== restaurantName.trim()
+      ) {
+        restaurant.restaurantName = restaurantName.trim();
+
+        restaurant.slug = await generateSlug(
+          restaurantName.trim(),
+          Restaurant,
+          restaurant._id,
+        );
+      }
+      restaurant.description = description ?? restaurant.description;
+      restaurant.phoneNumber = phoneNumber ?? restaurant.phoneNumber;
+      restaurant.cuisine = cuisine ?? restaurant.cuisine;
+      restaurant.address = address ?? restaurant.address;
+      restaurant.openingHours = openingHours ?? restaurant.openingHours;
+      restaurant.deliveryTime = deliveryTime ?? restaurant.deliveryTime;
+      restaurant.deliveryFee = deliveryFee ?? restaurant.deliveryFee;
+      restaurant.minimumOrder = minimumOrder ?? restaurant.minimumOrder;
+      restaurant.isOpen = isOpen ?? restaurant.isOpen;
+
+      if (restaurant.status === "rejected") {
+        restaurant.status = "pending";
+        restaurant.rejectionReason = null;
+      }
+
+      await restaurant.save();
+      response
+        .status(200)
+        .json({ message: "updated successfully", restaurant });
+    } catch (error) {
+      return response
+        .status(500)
+        .json({ message: "error deleting restaurant", err: error.message });
+    }
+  },
+  deleteMyRestaurant: async (request, response) => {
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+      const userID = request.userID;
+      const { slugID } = request.params;
+
+      const restaurant = await Restaurant.findOne({
+        ownerId: userID,
+        slug: slugID,
+      }).session(session);
+
+      if (!restaurant) {
+        await session.abortTransaction();
+        return response.status(404).json({
+          message: "Restaurant not found or you don't have permission.",
+        });
+      }
+
+      const totalRestaurants = await Restaurant.countDocuments({
+        ownerId: userID,
+      }).session(session);
+
+      await restaurant.deleteOne({ session });
+
+      if (totalRestaurants === 1) {
+        await User.findByIdAndUpdate(
+          userID,
+          {
+            role: "user",
+          },
+          { session },
+        );
+      }
+
+      await session.commitTransaction();
+
+      response.status(200).json({
+        message: "Restaurant deleted successfully",
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      return response
+        .status(500)
+        .json({ message: "error deleting restaurant", err: error.message });
+    } finally {
+      session.endSession();
     }
   },
 };
