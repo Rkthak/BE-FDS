@@ -6,6 +6,7 @@ const adminRouter = require("./router/adminRouter");
 
 const app = express();
 
+app.use("/uploads", express.static("uploads"));
 app.use(cookieParser());
 app.use(express.json());
 

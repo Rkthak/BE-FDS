@@ -18,6 +18,9 @@ const restaurantController = {
         minimumOrder,
       } = request.body;
 
+      const logo = request.files?.restaurantLogo?.[0];
+      const banner = request.files?.restaurantBanner?.[0];
+
       const existingPhoneNumber = await Restaurant.findOne({ phoneNumber });
 
       if (existingPhoneNumber) {
@@ -33,13 +36,15 @@ const restaurantController = {
         restaurantName,
         description,
         phoneNumber,
-        cuisine,
-        address,
-        openingHours,
+        cuisine: JSON.parse(cuisine),
+        address: JSON.parse(address),
+        openingHours: JSON.parse(openingHours),
         deliveryTime,
         deliveryFee,
         minimumOrder,
         slug,
+        logo: logo ? logo.path.replace(/\\/g, "/") : "",
+        banner: banner ? banner.path.replace(/\\/g, "/") : "",
         ownerId: request.userID,
       });
 

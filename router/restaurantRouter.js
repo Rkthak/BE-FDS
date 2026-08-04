@@ -8,6 +8,7 @@ const {
   deleteMyRestaurant,
   updateMyRestaurant,
 } = require("../controller/restaurantController");
+const upload = require("../middleware/uploadImage");
 
 const restaurantRouter = express.Router();
 
@@ -16,6 +17,16 @@ restaurantRouter.post(
   "/",
   isAuthenticated,
   allowRoles(["user", "restaurant"]),
+  upload.fields([
+    {
+      name: "restaurantLogo",
+      maxCount: 1,
+    },
+    {
+      name: "restaurantBanner",
+      maxCount: 1,
+    },
+  ]),
   createRestaurant,
 );
 restaurantRouter.get("/my", isAuthenticated, getMyRestaurant);
