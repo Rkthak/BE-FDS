@@ -7,6 +7,8 @@ const {
   getMyRestaurant,
   deleteMyRestaurant,
   updateMyRestaurant,
+  uploadLogo,
+  uploadBanner,
 } = require("../controller/restaurantController");
 const upload = require("../middleware/uploadImage");
 
@@ -32,6 +34,18 @@ restaurantRouter.post(
 restaurantRouter.get("/my", isAuthenticated, getMyRestaurant);
 restaurantRouter.delete("/my/:slugID", isAuthenticated, deleteMyRestaurant);
 restaurantRouter.put("/my/:slugID", isAuthenticated, updateMyRestaurant);
+restaurantRouter.put(
+  "/upload-logo",
+  isAuthenticated,
+  upload.single("restaurantLogo"),
+  uploadLogo,
+);
+restaurantRouter.put(
+  "/upload-banner",
+  isAuthenticated,
+  upload.single("restaurantBanner"),
+  uploadBanner,
+);
 
 // public routes
 restaurantRouter.get("/", getRestaurants);

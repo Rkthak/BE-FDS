@@ -236,6 +236,78 @@ const restaurantController = {
       session.endSession();
     }
   },
+  uploadLogo: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const restaurant = await Restaurant.findOne({
+        ownerId: userID,
+        status: "approved",
+      });
+
+      if (!restaurant) {
+        return response.status(404).json({
+          message: "restaurant not found.",
+        });
+      }
+
+      if (!request.file) {
+        return response.status(400).json({
+          message: "please upload a logo.",
+        });
+      }
+
+      restaurant.logo = request.file.path.replace(/\\/g, "/");
+
+      await restaurant.save();
+
+      response.status(200).json({
+        message: "logo uploaded successfully.",
+        logo: restaurant.logo,
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "error uploading logo.",
+        err: error.message,
+      });
+    }
+  },
+  uploadBanner: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const restaurant = await Restaurant.findOne({
+        ownerId: userID,
+        status: "approved",
+      });
+
+      if (!restaurant) {
+        return response.status(404).json({
+          message: "restaurant not found.",
+        });
+      }
+
+      if (!request.file) {
+        return response.status(400).json({
+          message: "please upload a logo.",
+        });
+      }
+
+      restaurant.banner = request.file.path.replace(/\\/g, "/");
+
+      await restaurant.save();
+
+      response.status(200).json({
+        message: "logo uploaded successfully.",
+        banner: restaurant.banner,
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "error uploading benner.",
+        err: error.message,
+      });
+    }
+  },
 };
 
 module.exports = restaurantController;
