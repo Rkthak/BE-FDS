@@ -110,6 +110,38 @@ const authController = {
         .json({ message: "error logging out user", err: error.message });
     }
   },
+  updateProfile: async (request, response) => {
+    try {
+      const { userName, email, addresses } = request.body;
+
+      const userID = request.userID;
+
+      const existingUser = await User.findById(userID).select("-password -__v");
+
+      if (!existingUser) {
+        return response.status(404).json({ message: "user not found" });
+      }
+
+      if (userName.length < 3) {
+        return response.status(400).json({
+          message: "username must be at least 3 characters long.",
+        });
+      }
+
+      existingUser.userName = userName ?? existingUser.userName;
+      existingUser.email = email ?? existingUser.email;
+      existingUser.addresses = addresses ?? existingUser.addresses;
+
+      await existingUser.save();
+
+      response.status(200).json({ message: "user updated successfully!" });
+    } catch (error) {
+      response
+        .status(500)
+        .json({ message: "error updating user", err: error.message });
+      console.log(error);
+    }
+  },
 };
 
 module.exports = authController;

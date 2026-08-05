@@ -26,10 +26,6 @@ const addressSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    isDefault: {
-      type: Boolean,
-      default: false,
-    },
   },
   { _id: false },
 );
@@ -73,7 +69,7 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
-    addresses: [addressSchema],
+    addresses: addressSchema,
 
     favoriteRestaurants: [
       {
@@ -106,4 +102,6 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-module.exports = mongoose.model("User", userSchema, "users");
+const User = mongoose.model("User", userSchema, "users");
+
+module.exports = User;
