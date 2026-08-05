@@ -6,6 +6,7 @@ const {
   logout,
   updateProfile,
   uploadProfileImage,
+  deleteProfile,
 } = require("../controller/authController");
 const { isAuthenticated } = require("../middleware/auth");
 const upload = require("../middleware/uploadImage");
@@ -23,5 +24,5 @@ authRouter.put(
   upload.single("profileImage"),
   uploadProfileImage,
 );
-
+authRouter.delete("/me", isAuthenticated, deleteProfile);
 module.exports = authRouter;

@@ -1,4 +1,5 @@
 const User = require("../model/user");
+const Restaurant = require("../model/restaurant");
 const bcrypt = require("bcrypt");
 const { SALT_ROUNDS, JWT_SECRET, ENV } = require("../utils/config");
 const jwt = require("jsonwebtoken");
@@ -181,6 +182,48 @@ const authController = {
       response
         .status(500)
         .json({ message: "error uploading profile image", err: error.message });
+    }
+  },
+  deleteProfile: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const user = await User.findById(userID);
+
+      if (!user) {
+        return response.status(404).json({
+          message: "user not found.",
+        });
+      }
+
+      if (user.role === "admin") {
+        return response.status(403).json({
+          message: "admin accounts cannot be deleted.",
+        });
+      }
+
+      const restaurant = await Restaurant.findOne({ ownerId: userID });
+
+      if (restaurant) {
+        return response.status(409).json({
+          message:
+            "please delete your restaurant before deleting your account.",
+        });
+      }
+
+      await user.deleteOne();
+
+      response.clearCookie("token", {
+        httpOnly: true,
+        secure: ENV === "production",
+        sameSite: ENV === "production" ? "none" : "lax",
+      });
+
+      response.status(200).json({ message: "profile deleted successfully" });
+    } catch (error) {
+      response
+        .status(500)
+        .json({ message: "error deleting your account", err: error.message });
     }
   },
 };
