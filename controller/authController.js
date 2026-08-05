@@ -9,6 +9,18 @@ const authController = {
     try {
       const { userName, email, password } = request.body;
 
+      if (userName.length < 3) {
+        return response.status(400).json({
+          message: "Username must be at least 3 characters long",
+        });
+      }
+
+      if (password.length < 6) {
+        return response.status(400).json({
+          message: "password must be at least 6 characters long",
+        });
+      }
+
       const existingUser = await User.findOne({ email });
 
       if (existingUser) {
