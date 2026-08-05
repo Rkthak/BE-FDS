@@ -122,6 +122,30 @@ const restaurantController = {
         .json({ message: "error getting restaurant", err: error.message });
     }
   },
+  getMyRestaurantByID: async (request, response) => {
+    try {
+      const { slugID } = request.params;
+      const userID = request.userID;
+
+      const restaurant = await Restaurant.findOne({
+        slug: slugID,
+        ownerId: userID,
+      });
+
+      if (!restaurant) {
+        return response.status(404).json({
+          message:
+            "you haven't applied to become a restaurant yet or the restaurant is not available",
+        });
+      }
+
+      response.status(200).json(restaurant);
+    } catch (error) {
+      response
+        .status(500)
+        .json({ message: "error getting restaurant", err: error.message });
+    }
+  },
   updateMyRestaurant: async (request, response) => {
     try {
       const { slugID } = request.params;
@@ -247,7 +271,8 @@ const restaurantController = {
 
       if (!restaurant) {
         return response.status(404).json({
-          message: "restaurant not found.",
+          message:
+            "restaurant not available or if your request is still pending",
         });
       }
 
@@ -283,7 +308,8 @@ const restaurantController = {
 
       if (!restaurant) {
         return response.status(404).json({
-          message: "restaurant not found.",
+          message:
+            "restaurant not available or if your request is still pending",
         });
       }
 

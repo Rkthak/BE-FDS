@@ -9,6 +9,7 @@ const {
   updateMyRestaurant,
   uploadLogo,
   uploadBanner,
+  getMyRestaurantByID,
 } = require("../controller/restaurantController");
 const upload = require("../middleware/uploadImage");
 
@@ -32,6 +33,7 @@ restaurantRouter.post(
   createRestaurant,
 );
 restaurantRouter.get("/my", isAuthenticated, getMyRestaurant);
+restaurantRouter.get("/my/:slugID", isAuthenticated, getMyRestaurantByID);
 restaurantRouter.delete("/my/:slugID", isAuthenticated, deleteMyRestaurant);
 restaurantRouter.put("/my/:slugID", isAuthenticated, updateMyRestaurant);
 restaurantRouter.put(
