@@ -2,6 +2,7 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const { SALT_ROUNDS, JWT_SECRET, ENV } = require("../utils/config");
 const jwt = require("jsonwebtoken");
+const { response } = require("express");
 
 const authController = {
   register: async (request, response) => {
@@ -140,6 +141,34 @@ const authController = {
         .status(500)
         .json({ message: "error updating user", err: error.message });
       console.log(error);
+    }
+  },
+  uploadProfileImage: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      if (!request.file) {
+        return response.status(200).json({ message: "please choose an image" });
+      }
+
+      const existingUser = await User.findById(userID);
+
+      if (!existingUser) {
+        return response.status(400).json({ message: "user not found" });
+      }
+
+      existingUser.profileImage =
+        request.file.path.replace(/\\/g, "/") ?? existingUser.profileImage;
+
+      await existingUser.save();
+
+      response
+        .status(200)
+        .json({ message: "profile image uploaded successfully" });
+    } catch (error) {
+      response
+        .status(500)
+        .json({ message: "error uploading profile image", err: error.message });
     }
   },
 };

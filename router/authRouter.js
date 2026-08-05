@@ -5,8 +5,10 @@ const {
   me,
   logout,
   updateProfile,
+  uploadProfileImage,
 } = require("../controller/authController");
 const { isAuthenticated } = require("../middleware/auth");
+const upload = require("../middleware/uploadImage");
 
 const authRouter = express.Router();
 
@@ -15,5 +17,11 @@ authRouter.post("/login", login);
 authRouter.get("/me", isAuthenticated, me);
 authRouter.post("/logout", isAuthenticated, logout);
 authRouter.put("/profile", isAuthenticated, updateProfile);
+authRouter.put(
+  "/upload-profileImage",
+  isAuthenticated,
+  upload.single("profileImage"),
+  uploadProfileImage,
+);
 
 module.exports = authRouter;
