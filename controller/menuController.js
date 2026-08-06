@@ -4,7 +4,8 @@ const Restaurant = require("../model/restaurant");
 const menuController = {
   createMenu: async (request, response) => {
     try {
-      const { restaurantID } = request.params;
+      const restaurantID = request.restaurantID;
+
       const {
         itemName,
         description,
@@ -16,7 +17,7 @@ const menuController = {
       } = request.body;
 
       if (!request.file) {
-        return response.status(404).json({ message: "dish image is required" });
+        return response.status(400).json({ message: "dish image is required" });
       }
 
       if (price <= 0) {
@@ -31,15 +32,6 @@ const menuController = {
         });
       }
 
-      const restaurant = await Restaurant.findOne({
-        _id: restaurantID,
-        ownerId: request.user._id,
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({ message: "restaurant not found" });
-      }
-
       const newMenu = new Menu({
         itemName,
         description,
@@ -49,7 +41,7 @@ const menuController = {
         nutrition: nutrition ? JSON.parse(nutrition) : {},
         customizations: customizations ? JSON.parse(customizations) : [],
         image: request.file.path.replace(/\\/g, "/"),
-        restaurantId: restaurant._id,
+        restaurantId: restaurantID,
       });
 
       await newMenu.save();
@@ -116,18 +108,7 @@ const menuController = {
   },
   getMyMenu: async (request, response) => {
     try {
-      const { restaurantID } = request.params;
-
-      const restaurant = await Restaurant.findOne({
-        _id: restaurantID,
-        ownerId: request.user._id,
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({
-          message: "restaurant not found or you don't have permission.",
-        });
-      }
+      const restaurantID = request.restaurantID;
 
       const menus = await Menu.find({
         restaurantId: restaurantID,
@@ -148,18 +129,8 @@ const menuController = {
   },
   getMyMenuById: async (request, response) => {
     try {
-      const { restaurantID, menuID } = request.params;
-
-      const restaurant = await Restaurant.findOne({
-        _id: restaurantID,
-        ownerId: request.user._id,
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({
-          message: "restaurant not found or you don't have permission.",
-        });
-      }
+      const { menuID } = request.params;
+      const restaurantID = request.restaurantID;
 
       const menu = await Menu.findOne({
         _id: menuID,
@@ -182,7 +153,8 @@ const menuController = {
   },
   updateMenu: async (request, response) => {
     try {
-      const { restaurantID, menuID } = request.params;
+      const { menuID } = request.params;
+      const restaurantID = request.restaurantID;
 
       const {
         itemName,
@@ -194,17 +166,6 @@ const menuController = {
         customizations,
         isAvailable,
       } = request.body;
-
-      const restaurant = await Restaurant.findOne({
-        _id: restaurantID,
-        ownerId: request.user._id,
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({
-          message: "restaurant not found.",
-        });
-      }
 
       const menu = await Menu.findOne({
         _id: menuID,
@@ -266,19 +227,8 @@ const menuController = {
   },
   deleteMenu: async (request, response) => {
     try {
-      const { restaurantID, menuID } = request.params;
-
-      const restaurant = await Restaurant.findOne({
-        _id: restaurantID,
-        ownerId: request.user._id,
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({
-          message: "restaurant not found.",
-        });
-      }
-
+      const { menuID } = request.params;
+      const restaurantID = request.restaurantID;
       const menu = await Menu.findOne({
         _id: menuID,
         restaurantId: restaurantID,
