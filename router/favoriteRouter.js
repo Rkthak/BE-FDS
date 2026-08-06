@@ -3,6 +3,8 @@ const { isAuthenticated } = require("../middleware/auth");
 const {
   getFavoriteRestaurants,
   updateFavoriteRestaurant,
+  updateFavoriteMenu,
+  getFavoriteMenus,
 } = require("../controller/favoriteController");
 
 const favoriteRouter = express.Router();
@@ -15,5 +17,8 @@ favoriteRouter.patch(
 );
 
 favoriteRouter.get("/restaurant", isAuthenticated, getFavoriteRestaurants);
+
+favoriteRouter.patch("/menu/:menuID", isAuthenticated, updateFavoriteMenu);
+favoriteRouter.get("/menu/", isAuthenticated, getFavoriteMenus);
 
 module.exports = favoriteRouter;

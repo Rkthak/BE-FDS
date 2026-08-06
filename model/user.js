@@ -81,7 +81,7 @@ const userSchema = new mongoose.Schema(
     favoriteFoods: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Food",
+        ref: "Menu",
       },
     ],
 
