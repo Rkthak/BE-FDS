@@ -19,12 +19,12 @@ cartRouter.post("/", isAuthenticated, addToCart);
 cartRouter.get("/", isAuthenticated, getCart);
 
 // Update item quantity
-cartRouter.put("/", isAuthenticated, updateCartItem);
+cartRouter.put("/item/:menuID", isAuthenticated, updateCartItem);
 
 // Remove item from cart
-cartRouter.delete("/item", isAuthenticated, removeCartItem);
+cartRouter.delete("/item/:menuID", isAuthenticated, removeCartItem);
 
 // Clear cart
-cartRouter.delete("/", isAuthenticated, clearCart);
+cartRouter.delete("/clear", isAuthenticated, clearCart);
 
 module.exports = cartRouter;

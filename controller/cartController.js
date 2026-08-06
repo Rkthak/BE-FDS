@@ -5,7 +5,8 @@ const cartController = {
   addToCart: async (request, response) => {
     try {
       const userID = request.userID;
-      const { menuID, quantity = 1 } = request.body;
+      const { menuID } = request.body;
+      const { quantity = 1 } = request.body;
 
       const menu = await Menu.findById(menuID);
 
@@ -113,7 +114,8 @@ const cartController = {
   updateCartItem: async (request, response) => {
     try {
       const userID = request.userID;
-      const { menuID, quantity } = request.body;
+      const { menuID } = request.params;
+      const { quantity } = request.body;
 
       if (quantity < 1) {
         return response.status(400).json({
@@ -163,7 +165,7 @@ const cartController = {
   removeCartItem: async (request, response) => {
     try {
       const userID = request.userID;
-      const { menuID } = request.body;
+      const { menuID } = request.params;
 
       const cart = await Cart.findOne({
         userId: userID,
