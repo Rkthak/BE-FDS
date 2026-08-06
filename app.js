@@ -6,6 +6,7 @@ const adminRouter = require("./router/adminRouter");
 const menuRouter = require("./router/menuRouter");
 const favoriteRouter = require("./router/favoriteRouter");
 const cartRouter = require("./router/cartRouter");
+const orderRouter = require("./router/orderRouter");
 
 const app = express();
 
@@ -19,5 +20,6 @@ app.use("/api/v1/restaurant", menuRouter);
 app.use("/api/v1/favorite", favoriteRouter);
 app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/order", orderRouter);
 
 module.exports = app;

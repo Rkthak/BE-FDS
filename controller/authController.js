@@ -136,7 +136,7 @@ const authController = {
         return response.status(404).json({ message: "user not found" });
       }
 
-      if (userName.length < 3) {
+      if (userName && userName.length < 3) {
         return response.status(400).json({
           message: "username must be at least 3 characters long.",
         });
