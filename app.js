@@ -5,6 +5,7 @@ const restaurantRouter = require("./router/restaurantRouter");
 const adminRouter = require("./router/adminRouter");
 const menuRouter = require("./router/menuRouter");
 const favoriteRouter = require("./router/favoriteRouter");
+const cartRouter = require("./router/cartRouter");
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/restaurant", restaurantRouter);
 app.use("/api/v1/restaurant", menuRouter);
 app.use("/api/v1/favorite", favoriteRouter);
+app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/admin", adminRouter);
 
 module.exports = app;
