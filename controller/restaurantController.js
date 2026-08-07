@@ -63,6 +63,8 @@ const restaurantController = {
       });
     }
   },
+
+  // public get Restaurant for all users
   getRestaurants: async (request, response) => {
     try {
       const restaurants = await Restaurant.find({
@@ -90,7 +92,7 @@ const restaurantController = {
         slug: slugID,
         status: "approved",
         isOpen: true,
-      }).select("-__v");
+      }).select("-__v -ownerId");
 
       if (!restaurant) {
         return response.status(400).json({ message: "restaurant not found" });
@@ -103,6 +105,8 @@ const restaurantController = {
         .json({ message: "error getting restaurant", err: error.message });
     }
   },
+
+  // protected only for Restautants
   getMyRestaurant: async (request, response) => {
     try {
       const userID = request.userID;
@@ -124,20 +128,7 @@ const restaurantController = {
   },
   getMyRestaurantByID: async (request, response) => {
     try {
-      const { slugID } = request.params;
-      const userID = request.userID;
-
-      const restaurant = await Restaurant.findOne({
-        slug: slugID,
-        ownerId: userID,
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({
-          message:
-            "you haven't applied to become a restaurant yet or the restaurant is not available",
-        });
-      }
+      const restaurant = request.restaurant;
 
       response.status(200).json(restaurant);
     } catch (error) {
@@ -148,8 +139,7 @@ const restaurantController = {
   },
   updateMyRestaurant: async (request, response) => {
     try {
-      const { slugID } = request.params;
-      const userID = request.userID;
+      const restaurant = request.restaurant;
       const {
         restaurantName,
         description,
@@ -162,17 +152,6 @@ const restaurantController = {
         minimumOrder,
         isOpen,
       } = request.body;
-
-      const restaurant = await Restaurant.findOne({
-        slug: slugID,
-        ownerId: userID,
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({
-          message: "Restaurant not found or you don't have permission.",
-        });
-      }
 
       if (
         restaurantName &&
@@ -208,7 +187,7 @@ const restaurantController = {
     } catch (error) {
       return response
         .status(500)
-        .json({ message: "error deleting restaurant", err: error.message });
+        .json({ message: "error updating restaurant", err: error.message });
     }
   },
   deleteMyRestaurant: async (request, response) => {
@@ -262,19 +241,7 @@ const restaurantController = {
   },
   uploadLogo: async (request, response) => {
     try {
-      const userID = request.userID;
-
-      const restaurant = await Restaurant.findOne({
-        ownerId: userID,
-        status: "approved",
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({
-          message:
-            "restaurant not available or if your request is still pending",
-        });
-      }
+      const restaurant = request.restaurant;
 
       if (!request.file) {
         return response.status(400).json({
@@ -299,23 +266,11 @@ const restaurantController = {
   },
   uploadBanner: async (request, response) => {
     try {
-      const userID = request.userID;
-
-      const restaurant = await Restaurant.findOne({
-        ownerId: userID,
-        status: "approved",
-      });
-
-      if (!restaurant) {
-        return response.status(404).json({
-          message:
-            "restaurant not available or if your request is still pending",
-        });
-      }
+      const restaurant = request.restaurant;
 
       if (!request.file) {
         return response.status(400).json({
-          message: "please upload a logo.",
+          message: "please upload a banner.",
         });
       }
 
@@ -324,12 +279,12 @@ const restaurantController = {
       await restaurant.save();
 
       response.status(200).json({
-        message: "logo uploaded successfully.",
+        message: "banner uploaded successfully.",
         banner: restaurant.banner,
       });
     } catch (error) {
       response.status(500).json({
-        message: "error uploading benner.",
+        message: "error uploading banner.",
         err: error.message,
       });
     }

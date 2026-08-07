@@ -12,6 +12,7 @@ const {
   getMyRestaurantByID,
 } = require("../controller/restaurantController");
 const upload = require("../middleware/uploadImage");
+const isMyRestaurant = require("../middleware/isMyRestaurant");
 
 const restaurantRouter = express.Router();
 
@@ -33,18 +34,39 @@ restaurantRouter.post(
   createRestaurant,
 );
 restaurantRouter.get("/my", isAuthenticated, getMyRestaurant);
-restaurantRouter.get("/my/:slugID", isAuthenticated, getMyRestaurantByID);
-restaurantRouter.delete("/my/:slugID", isAuthenticated, deleteMyRestaurant);
-restaurantRouter.put("/my/:slugID", isAuthenticated, updateMyRestaurant);
-restaurantRouter.put(
-  "/upload-logo",
+restaurantRouter.get(
+  "/my/:slugID",
   isAuthenticated,
+  allowRoles(["restaurant"]),
+  isMyRestaurant,
+  getMyRestaurantByID,
+);
+restaurantRouter.delete(
+  "/my/:slugID",
+  isAuthenticated,
+  allowRoles(["restaurant"]),
+  deleteMyRestaurant,
+);
+restaurantRouter.put(
+  "/my/:slugID",
+  isAuthenticated,
+  allowRoles(["restaurant"]),
+  isMyRestaurant,
+  updateMyRestaurant,
+);
+restaurantRouter.put(
+  "/my/:slugID/upload-logo",
+  isAuthenticated,
+  allowRoles(["restaurant"]),
+  isMyRestaurant,
   upload.single("restaurantLogo"),
   uploadLogo,
 );
 restaurantRouter.put(
-  "/upload-banner",
+  "/my/:slugID/upload-banner",
   isAuthenticated,
+  allowRoles(["restaurant"]),
+  isMyRestaurant,
   upload.single("restaurantBanner"),
   uploadBanner,
 );
