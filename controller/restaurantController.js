@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Restaurant = require("../model/restaurant");
 const User = require("../model/user");
 const generateSlug = require("../utils/generateSlug");
+const Menu = require("../model/menu");
 
 const restaurantController = {
   createRestaurant: async (request, response) => {
@@ -103,6 +104,70 @@ const restaurantController = {
       return response
         .status(500)
         .json({ message: "error getting restaurant", err: error.message });
+    }
+  },
+  searchRestaurantByFilters: async (request, response) => {
+    try {
+      const { location, cuisine, ratings, minPrice, maxPrice } = request.query;
+      const restaurantQuery = {
+        status: "approved",
+        isOpen: true,
+      };
+
+      if (minPrice || maxPrice) {
+        const menuQuerry = {
+          isAvailable: true,
+        };
+
+        if (minPrice && maxPrice) {
+          menuQuerry.price = {
+            $gte: Number(minPrice),
+            $lte: Number(maxPrice),
+          };
+        } else if (maxPrice) {
+          menuQuerry.price = {
+            $lte: Number(maxPrice),
+          };
+        } else if (minPrice) {
+          menuQuerry.price = {
+            $gte: Number(minPrice),
+          };
+        }
+
+        const menu = await Menu.find(menuQuerry);
+
+        const restaurantIDs = menu.map((item) => item.restaurantId);
+
+        restaurantQuery._id = {
+          $in: restaurantIDs,
+        };
+      }
+
+      if (location) {
+        restaurantQuery["address.city"] = location;
+      }
+
+      if (cuisine) {
+        restaurantQuery["cuisine"] = cuisine;
+      }
+
+      if (ratings) {
+        restaurantQuery["rating"] = { $gte: Number(ratings) };
+      }
+
+      const restaurant = await Restaurant.find(restaurantQuery);
+
+      response
+        .status(200)
+        .json(
+          restaurant.length > 0
+            ? restaurant
+            : { message: "no restaurant available according to filters" },
+        );
+    } catch (error) {
+      response
+        .status(500)
+        .json({ message: "error searching restaurant", err: error.message });
     }
   },
 

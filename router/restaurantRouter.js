@@ -10,6 +10,7 @@ const {
   uploadLogo,
   uploadBanner,
   getMyRestaurantByID,
+  searchRestaurantByFilters,
 } = require("../controller/restaurantController");
 const upload = require("../middleware/uploadImage");
 const isMyRestaurant = require("../middleware/isMyRestaurant");
@@ -73,8 +74,7 @@ restaurantRouter.put(
 
 // public routes
 restaurantRouter.get("/", getRestaurants);
+restaurantRouter.get("/search", searchRestaurantByFilters);
 restaurantRouter.get("/:slugID", getRestaurantsByID);
-
-//  protected routes
 
 module.exports = restaurantRouter;
