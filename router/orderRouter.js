@@ -1,25 +1,49 @@
 const express = require("express");
-const { isAuthenticated } = require("../middleware/auth");
+const { isAuthenticated, allowRoles } = require("../middleware/auth");
 
 const {
   placeOrder,
   getMyOrders,
   getOrderById,
   cancelOrder,
+  getRestaurantOrders,
+  updateOrderStatus,
+  getRestaurantOrderById,
 } = require("../controller/orderController");
+const isApprovedRestaurant = require("../middleware/isApprovedRestaurant");
 
 const orderRouter = express.Router();
 
-// Place order
+orderRouter.get(
+  "/restaurant",
+  isAuthenticated,
+  allowRoles(["restaurant"]),
+  isApprovedRestaurant,
+  getRestaurantOrders,
+);
+
+orderRouter.get(
+  "/restaurant/:orderID",
+  isAuthenticated,
+  allowRoles(["restaurant"]),
+  isApprovedRestaurant,
+  getRestaurantOrderById,
+);
+
+orderRouter.patch(
+  "/restaurant/:orderID/status",
+  isAuthenticated,
+  allowRoles(["restaurant"]),
+  isApprovedRestaurant,
+  updateOrderStatus,
+);
+
 orderRouter.post("/", isAuthenticated, placeOrder);
 
-// Get my orders
 orderRouter.get("/my", isAuthenticated, getMyOrders);
 
-// Get single order
 orderRouter.get("/:orderID", isAuthenticated, getOrderById);
 
-// Cancel order
 orderRouter.patch("/:orderID/cancel", isAuthenticated, cancelOrder);
 
 module.exports = orderRouter;

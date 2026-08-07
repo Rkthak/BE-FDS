@@ -104,7 +104,6 @@ const orderController = {
       session.endSession();
     }
   },
-
   getMyOrders: async (request, response) => {
     try {
       const userID = request.userID;
@@ -117,22 +116,21 @@ const orderController = {
 
       if (orders.length === 0) {
         return response.status(404).json({
-          message: "No orders found.",
+          message: "no orders found.",
         });
       }
 
       response.status(200).json({
-        message: "Orders fetched successfully.",
+        message: "orders fetched successfully.",
         orders,
       });
     } catch (error) {
       response.status(500).json({
-        message: "Error getting orders.",
+        message: "error getting orders.",
         err: error.message,
       });
     }
   },
-
   getOrderById: async (request, response) => {
     try {
       const { orderID } = request.params;
@@ -145,22 +143,21 @@ const orderController = {
 
       if (!order) {
         return response.status(404).json({
-          message: "Order not found.",
+          message: "order not found.",
         });
       }
 
       response.status(200).json({
-        message: "Order fetched successfully.",
+        message: "order fetched successfully.",
         order,
       });
     } catch (error) {
       response.status(500).json({
-        message: "Error getting order.",
+        message: "error getting order.",
         err: error.message,
       });
     }
   },
-
   cancelOrder: async (request, response) => {
     try {
       const { orderID } = request.params;
@@ -173,13 +170,13 @@ const orderController = {
 
       if (!order) {
         return response.status(404).json({
-          message: "Order not found.",
+          message: "order not found.",
         });
       }
 
       if (order.orderStatus !== "pending") {
         return response.status(400).json({
-          message: "Order cannot be cancelled now.",
+          message: "order cannot be cancelled now.",
         });
       }
 
@@ -188,11 +185,117 @@ const orderController = {
       await order.save();
 
       response.status(200).json({
-        message: "Order cancelled successfully.",
+        message: "order cancelled successfully.",
       });
     } catch (error) {
       response.status(500).json({
-        message: "Error cancelling order.",
+        message: "error cancelling order.",
+        err: error.message,
+      });
+    }
+  },
+  getRestaurantOrders: async (request, response) => {
+    try {
+      const restaurantID = request.restaurantID;
+      console.log(restaurantID);
+
+      const orders = await Order.find({
+        restaurantId: restaurantID,
+      })
+        .populate("userId", "userName phoneNumber")
+        .sort({ createdAt: -1 });
+
+      if (orders.length === 0) {
+        return response.status(404).json({
+          message: "no orders found.",
+        });
+      }
+
+      response.status(200).json({
+        message: "restaurant orders fetched successfully.",
+        orders,
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "error getting restaurant orders.",
+        err: error.message,
+      });
+    }
+  },
+  getRestaurantOrderById: async (request, response) => {
+    try {
+      const { orderID } = request.params;
+      const restaurantID = request.restaurantID;
+
+      const order = await Order.findOne({
+        _id: orderID,
+        restaurantId: restaurantID,
+      })
+        .populate("userId", "userName phoneNumber")
+        .populate("items.menuId", "itemName image");
+
+      if (!order) {
+        return response.status(404).json({
+          message: "order not found.",
+        });
+      }
+
+      response.status(200).json({
+        message: "order fetched successfully.",
+        order,
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "error getting order.",
+        err: error.message,
+      });
+    }
+  },
+  updateOrderStatus: async (request, response) => {
+    try {
+      const { orderID } = request.params;
+
+      const { status } = request.body;
+
+      const restaurantID = request.restaurantID;
+
+      const order = await Order.findOne({
+        _id: orderID,
+        restaurantId: restaurantID,
+      });
+
+      if (!order) {
+        return response.status(404).json({
+          message: "order not found.",
+        });
+      }
+
+      const allowedStatus = [
+        "confirmed",
+        "preparing",
+        "ready",
+        "out_for_delivery",
+        "delivered",
+        "cancelled",
+      ];
+
+      if (!allowedStatus.includes(status)) {
+        return response.status(400).json({
+          message: "invalid order status.",
+        });
+      }
+
+      order.orderStatus = status;
+
+      await order.save();
+
+      response.status(200).json({
+        message: "order status updated successfully.",
+        order,
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "error updating order status.",
         err: error.message,
       });
     }
