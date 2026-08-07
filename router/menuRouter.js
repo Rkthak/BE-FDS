@@ -11,28 +11,33 @@ const upload = require("../middleware/uploadImage");
 const {
   createMenu,
   getRestaurantMenus,
-  getMenuById,
   updateMenu,
   deleteMenu,
   getMyMenu,
   getMyMenuById,
+  getAllMenus,
+  getRestaurantMenuById,
+  getMenuById,
 } = require("../controller/menuController");
 const isApprovedRestaurant = require("../middleware/isApprovedRestaurant");
 
 const menuRouter = express.Router();
 
 /* ----------------------- Public Routes ----------------------- */
+// Get all menus
+menuRouter.get("/", getAllMenus);
+menuRouter.get("/:menuID", getMenuById);
 
 // Get all menus of a restaurant
-menuRouter.get("/:restaurantID/menu", getRestaurantMenus);
+menuRouter.get("/restaurant/:restaurantID", getRestaurantMenus);
 
 // Get single menu of a restaurant
-menuRouter.get("/:restaurantID/menu/:menuID", getMenuById);
+menuRouter.get("/restaurant/:restaurantID/:menuID", getRestaurantMenuById);
 
 /* ---------------- Restaurant Owner Routes ---------------- */
 
 menuRouter.post(
-  "/:restaurantID/menu",
+  "/my",
   isAuthenticated,
   allowRoles(["restaurant"]),
   isApprovedRestaurant,
@@ -41,7 +46,7 @@ menuRouter.post(
 );
 
 menuRouter.get(
-  "/my/:restaurantID/menu",
+  "/my",
   isAuthenticated,
   allowRoles(["restaurant"]),
   isApprovedRestaurant,
@@ -49,7 +54,7 @@ menuRouter.get(
 );
 
 menuRouter.get(
-  "/my/:restaurantID/menu/:menuID",
+  "/my/:menuID",
   isAuthenticated,
   allowRoles(["restaurant"]),
   isApprovedRestaurant,
@@ -57,7 +62,7 @@ menuRouter.get(
 );
 
 menuRouter.put(
-  "/:restaurantID/menu/:menuID",
+  "/my/:menuID",
   isAuthenticated,
   allowRoles(["restaurant"]),
   isApprovedRestaurant,
@@ -66,7 +71,7 @@ menuRouter.put(
 );
 
 menuRouter.delete(
-  "/:restaurantID/menu/:menuID",
+  "/my/:menuID",
   isAuthenticated,
   allowRoles(["restaurant"]),
   isApprovedRestaurant,

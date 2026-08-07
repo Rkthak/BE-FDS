@@ -53,6 +53,45 @@ const menuController = {
         .json({ message: "error creating menu", err: error.message });
     }
   },
+  getAllMenus: async (request, response) => {
+    try {
+      const menu = await Menu.find({ isAvailable: true })
+        .select("-__v")
+        .populate(
+          "restaurantId",
+          "resstaurantName slug logo phoneNumber address isOpen",
+        );
+
+      if (menu.length < 1) {
+        return response.status(404).json({ message: "menu is not available" });
+      }
+
+      response.status(200).json(menu);
+    } catch (error) {
+      response.status(500).json({ message: "error getting all menus" });
+    }
+  },
+  getMenuById: async (request, response) => {
+    try {
+      const { menuID } = request.params;
+      const menu = await Menu.findOne({ _id: menuID, isAvailable: true })
+        .select("-__v")
+        .populate(
+          "restaurantId",
+          "resstaurantName slug logo phoneNumber address isOpen",
+        );
+
+      if (!menu) {
+        return response.status(404).json({ message: "menu is not available" });
+      }
+
+      response.status(200).json(menu);
+    } catch (error) {
+      response
+        .status(500)
+        .json({ message: "error getting menu", err: error.message });
+    }
+  },
   getRestaurantMenus: async (request, response) => {
     try {
       const { restaurantID } = request.params;
@@ -82,7 +121,7 @@ const menuController = {
       });
     }
   },
-  getMenuById: async (request, response) => {
+  getRestaurantMenuById: async (request, response) => {
     try {
       const { restaurantID, menuID } = request.params;
 

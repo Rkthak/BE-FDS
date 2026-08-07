@@ -16,7 +16,7 @@ app.use(express.json());
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/restaurant", restaurantRouter);
-app.use("/api/v1/restaurant", menuRouter);
+app.use("/api/v1/menu", menuRouter);
 app.use("/api/v1/favorite", favoriteRouter);
 app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/admin", adminRouter);
