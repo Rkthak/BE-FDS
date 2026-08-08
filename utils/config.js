@@ -6,7 +6,8 @@ const HOST = process.env.HOST;
 const SALT_ROUNDS = process.env.SALT_ROUNDS;
 const ENV = process.env.ENV;
 const JWT_SECRET = process.env.JWT_SECRET;
-
+const RAZORPAY_TEST_API_KEY = process.env.RAZORPAY_TEST_API_KEY;
+const RAZORPAY_TEST_KEY_SECRET = process.env.RAZORPAY_TEST_KEY_SECRET;
 module.exports = {
   MONGODB_URI,
   PORT,
@@ -14,4 +15,6 @@ module.exports = {
   SALT_ROUNDS,
   ENV,
   JWT_SECRET,
+  RAZORPAY_TEST_API_KEY,
+  RAZORPAY_TEST_KEY_SECRET,
 };
