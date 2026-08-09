@@ -84,7 +84,15 @@ const authController = {
         maxAge: 1000 * 60 * 60, // set cookie expiration time to 1 hour
       });
 
-      response.status(200).json({ message: "user login successfull" });
+      response.status(200).json({
+        message: "user login successfull",
+        user: {
+          _id: existingUser._id,
+          userName: existingUser.userName,
+          email: existingUser.email,
+          role: existingUser.role,
+        },
+      });
     } catch (error) {
       response
         .status(500)
@@ -101,7 +109,7 @@ const authController = {
         return response.status(404).json({ message: "no user found" });
       }
 
-      response.status(200).json(existingUser || null);
+      response.status(200).json({ user: existingUser || null });
     } catch (error) {
       response
         .status(500)
@@ -126,7 +134,7 @@ const authController = {
   },
   updateProfile: async (request, response) => {
     try {
-      const { userName, email, addresses } = request.body;
+      const { userName, email, addresses, phoneNumber } = request.body;
 
       const userID = request.userID;
 
@@ -145,10 +153,13 @@ const authController = {
       existingUser.userName = userName ?? existingUser.userName;
       existingUser.email = email ?? existingUser.email;
       existingUser.addresses = addresses ?? existingUser.addresses;
+      existingUser.phoneNumber = phoneNumber ?? existingUser.phoneNumber;
 
       await existingUser.save();
 
-      response.status(200).json({ message: "user updated successfully!" });
+      response
+        .status(200)
+        .json({ message: "user updated successfully!", user: existingUser });
     } catch (error) {
       response
         .status(500)
@@ -177,7 +188,10 @@ const authController = {
 
       response
         .status(200)
-        .json({ message: "profile image uploaded successfully" });
+        .json({
+          message: "profile image uploaded successfully",
+          user: existingUser,
+        });
     } catch (error) {
       response
         .status(500)

@@ -1,3 +1,4 @@
+const cors = require("cors");
 const express = require("express");
 const authRouter = require("./router/authRouter");
 const cookieParser = require("cookie-parser");
@@ -12,6 +13,12 @@ const paymentRouter = require("./router/paymentRouter");
 const app = express();
 
 app.use("/uploads", express.static("uploads"));
+app.use(
+  cors({
+    origin: "http://localhost:5173", // replace with your frontend URL
+    credentials: true, // allow cookies to be sent
+  }),
+);
 app.use(cookieParser());
 app.use(express.json());
 
