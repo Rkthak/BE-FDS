@@ -143,6 +143,12 @@ const cartController = {
 
       const menu = await Menu.findById(menuID);
 
+      if (!menu) {
+        return response.status(404).json({
+          message: "menu not found",
+        });
+      }
+
       cart.totalAmount =
         cart.totalAmount - menu.price * item.quantity + menu.price * quantity;
 
@@ -150,12 +156,23 @@ const cartController = {
 
       await cart.save();
 
-      response.status(200).json({
+      await cart.populate([
+        {
+          path: "items.menuId",
+          select: "itemName description price image isVeg",
+        },
+        {
+          path: "restaurantId",
+          select: "restaurantName slug",
+        },
+      ]);
+
+      return response.status(200).json({
         message: "cart updated",
         cart,
       });
     } catch (error) {
-      response.status(500).json({
+      return response.status(500).json({
         message: "error updating cart",
         err: error.message,
       });
