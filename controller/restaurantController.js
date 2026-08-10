@@ -96,7 +96,7 @@ const restaurantController = {
       }).select("-__v -ownerId");
 
       if (!restaurant) {
-        return response.status(400).json({ message: "restaurant not found" });
+        return response.status(404).json({ message: "restaurant not found" });
       }
 
       response.status(200).json(restaurant);
