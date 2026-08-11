@@ -252,6 +252,32 @@ const paymentController = {
       await session.endSession();
     }
   },
+
+  // =========================
+  // GET PAYMENT
+  // =========================
+
+  getMyPayments: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const payments = await Payment.find({
+        userId: userID,
+      })
+        .populate("orderId", "totalAmount orderStatus createdAt")
+        .sort({ createdAt: -1 });
+
+      response.status(200).json({
+        message: "payment history fetched successfully",
+        payments,
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "error getting payment history",
+        err: error.message,
+      });
+    }
+  },
 };
 
 module.exports = paymentController;
