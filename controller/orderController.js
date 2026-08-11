@@ -93,6 +93,7 @@ const orderController = {
 
       response.status(201).json({
         message: "Order placed successfully.",
+        order: newOrder,
       });
     } catch (error) {
       await session.abortTransaction();
