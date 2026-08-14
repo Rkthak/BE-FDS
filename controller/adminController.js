@@ -63,7 +63,6 @@ const adminController = {
   getRestaurants: async (request, response) => {
     try {
       const user = request.user;
-      console.log(user);
       const restaurants = await Restaurant.find()
         .select("-__v")
         .populate("ownerId", "userName email profileImage");

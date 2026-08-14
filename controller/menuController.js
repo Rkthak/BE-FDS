@@ -55,41 +55,65 @@ const menuController = {
   },
   getAllMenus: async (request, response) => {
     try {
-      const menu = await Menu.find({ isAvailable: true })
+      const approvedRestaurants = await Restaurant.find({
+        status: "approved",
+      }).select("_id");
+
+      const restaurantIDs = approvedRestaurants.map(
+        (restaurant) => restaurant._id,
+      );
+
+      const menu = await Menu.find({
+        isAvailable: true,
+        restaurantId: { $in: restaurantIDs },
+      })
         .select("-__v")
         .populate(
           "restaurantId",
-          "resstaurantName slug logo phoneNumber address isOpen",
+          "restaurantName slug logo phoneNumber address isOpen",
         );
 
       if (menu.length < 1) {
-        return response.status(404).json({ message: "menu is not available" });
+        return response.status(404).json({
+          message: "menu is not available",
+        });
       }
 
       response.status(200).json(menu);
     } catch (error) {
-      response.status(500).json({ message: "error getting all menus" });
+      response.status(500).json({
+        message: "error getting all menus",
+        err: error.message,
+      });
     }
   },
   getMenuById: async (request, response) => {
     try {
       const { menuID } = request.params;
-      const menu = await Menu.findOne({ _id: menuID, isAvailable: true })
-        .select("-__v")
-        .populate(
-          "restaurantId",
-          "resstaurantName slug logo phoneNumber address isOpen",
-        );
 
-      if (!menu) {
-        return response.status(404).json({ message: "menu is not available" });
+      const menu = await Menu.findOne({
+        _id: menuID,
+        isAvailable: true,
+      })
+        .select("-__v")
+        .populate({
+          path: "restaurantId",
+          match: { status: "approved" },
+          select: "restaurantName slug logo phoneNumber address isOpen",
+        });
+
+      if (!menu || !menu.restaurantId) {
+        return response.status(404).json({
+          message: "menu is not available",
+        });
       }
 
       response.status(200).json(menu);
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error getting menu", err: error.message });
+      response.status(500).json({
+        message: "error getting menu",
+        err: error.message,
+      });
     }
   },
   getRestaurantMenus: async (request, response) => {
