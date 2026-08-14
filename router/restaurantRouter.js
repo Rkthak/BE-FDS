@@ -11,6 +11,8 @@ const {
   uploadBanner,
   getMyRestaurantByID,
   searchRestaurantByFilters,
+  getMyRestaurantApplication,
+  updateMyRestaurantApplication,
 } = require("../controller/restaurantController");
 const upload = require("../middleware/uploadImage");
 const isMyRestaurant = require("../middleware/isMyRestaurant");
@@ -33,6 +35,26 @@ restaurantRouter.post(
     },
   ]),
   createRestaurant,
+);
+restaurantRouter.get(
+  "/my-application",
+  isAuthenticated,
+  getMyRestaurantApplication,
+);
+restaurantRouter.put(
+  "/my-application",
+  isAuthenticated,
+  upload.fields([
+    {
+      name: "restaurantLogo",
+      maxCount: 1,
+    },
+    {
+      name: "restaurantBanner",
+      maxCount: 1,
+    },
+  ]),
+  updateMyRestaurantApplication,
 );
 restaurantRouter.get("/my", isAuthenticated, getMyRestaurant);
 restaurantRouter.get(

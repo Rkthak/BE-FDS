@@ -64,6 +64,147 @@ const restaurantController = {
       });
     }
   },
+  getMyRestaurantApplication: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const restaurant = await Restaurant.findOne({
+        ownerId: userID,
+      }).select("-__v");
+
+      if (!restaurant) {
+        return response.status(404).json({
+          message: "No restaurant application found.",
+        });
+      }
+
+      response.status(200).json({
+        message: "Restaurant application fetched successfully.",
+        restaurant,
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "Error getting restaurant application.",
+        err: error.message,
+      });
+    }
+  },
+  updateMyRestaurantApplication: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const restaurant = await Restaurant.findOne({
+        ownerId: userID,
+      });
+
+      if (!restaurant) {
+        return response.status(404).json({
+          message: "Restaurant application not found.",
+        });
+      }
+
+      // Only rejected applications can be resubmitted
+      if (restaurant.status !== "rejected") {
+        return response.status(400).json({
+          message: "Only rejected applications can be updated.",
+        });
+      }
+
+      const {
+        restaurantName,
+        description,
+        cuisine,
+        phoneNumber,
+        address,
+        openingHours,
+        deliveryTime,
+        deliveryFee,
+        minimumOrder,
+      } = request.body;
+
+      // Basic fields
+      restaurant.restaurantName = restaurantName ?? restaurant.restaurantName;
+
+      restaurant.description = description ?? restaurant.description;
+
+      restaurant.cuisine = cuisine ?? restaurant.cuisine;
+
+      restaurant.phoneNumber = phoneNumber ?? restaurant.phoneNumber;
+
+      restaurant.deliveryTime = deliveryTime ?? restaurant.deliveryTime;
+
+      restaurant.deliveryFee = deliveryFee ?? restaurant.deliveryFee;
+
+      restaurant.minimumOrder = minimumOrder ?? restaurant.minimumOrder;
+
+      // Nested address
+      if (address) {
+        restaurant.address = {
+          street: address.street ?? restaurant.address.street,
+          city: address.city ?? restaurant.address.city,
+          state: address.state ?? restaurant.address.state,
+          pincode: address.pincode ?? restaurant.address.pincode,
+          country: address.country ?? restaurant.address.country,
+        };
+      }
+
+      // Nested opening hours
+      if (openingHours) {
+        restaurant.openingHours = {
+          open: openingHours.open ?? restaurant.openingHours.open,
+          close: openingHours.close ?? restaurant.openingHours.close,
+        };
+      }
+
+      // New application
+      restaurant.status = "pending";
+      restaurant.rejectionReason = "";
+
+      // Update logo if uploaded
+      if (request.files?.restaurantLogo?.[0]) {
+        restaurant.logo = request.files.restaurantLogo[0].path.replace(
+          /\\/g,
+          "/",
+        );
+      }
+
+      // Update banner if uploaded
+      if (request.files?.restaurantBanner?.[0]) {
+        restaurant.banner = request.files.restaurantBanner[0].path.replace(
+          /\\/g,
+          "/",
+        );
+      }
+
+      await restaurant.save();
+
+      return response.status(200).json({
+        message: "Restaurant application resubmitted successfully.",
+        restaurant,
+      });
+    } catch (error) {
+      // Duplicate phone number
+      if (error.code === 11000) {
+        return response.status(400).json({
+          message:
+            "Phone number is already registered with another restaurant.",
+        });
+      }
+
+      // Mongoose validation error
+      if (error.name === "ValidationError") {
+        return response.status(400).json({
+          message: "Invalid restaurant data.",
+          errors: Object.values(error.errors).map((err) => err.message),
+        });
+      }
+
+      return response.status(500).json({
+        message: "Error updating restaurant application.",
+        err: error.message,
+      });
+    }
+  },
 
   // public get Restaurant for all users
   getRestaurants: async (request, response) => {
