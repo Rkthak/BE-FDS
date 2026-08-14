@@ -198,7 +198,6 @@ const orderController = {
   getRestaurantOrders: async (request, response) => {
     try {
       const restaurantID = request.restaurantID;
-      console.log(restaurantID);
 
       const orders = await Order.find({
         restaurantId: restaurantID,
