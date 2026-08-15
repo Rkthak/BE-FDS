@@ -293,11 +293,18 @@ const orderController = {
 
       order.orderStatus = status;
 
-      await order.save();
+      const updateOrder = await order.save();
+
+      const io = getIO();
+
+      io.to(`user:${order.userId.toString()}`).emit("order:status:update", {
+        orderID: order._id.toString(),
+        status: order.orderStatus,
+      });
 
       response.status(200).json({
         message: "order status updated successfully.",
-        order,
+        order: updateOrder,
       });
     } catch (error) {
       response.status(500).json({
