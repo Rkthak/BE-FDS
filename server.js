@@ -1,13 +1,13 @@
 const mongoose = require("mongoose");
 const { MONGODB_URI, PORT, HOST } = require("./utils/config");
-const app = require("./app");
+const { server } = require("./app");
 
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
     console.log("mongodb connected");
 
-    app
+    server
       .listen(PORT, HOST, () => {
         console.log("server listening ...");
       })

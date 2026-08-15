@@ -3,6 +3,7 @@ const User = require("../model/user");
 const mongoose = require("mongoose");
 const { updateMyRestaurant } = require("./restaurantController");
 const generateSlug = require("../utils/generateSlug");
+const { getIO } = require("../socket");
 
 const adminController = {
   approveRestaurant: async (request, response) => {
@@ -44,6 +45,14 @@ const adminController = {
       }
 
       await session.commitTransaction();
+
+      const io = getIO();
+
+      io.to(`restaurant:${restaurant._id}`).emit("restaurant:status:update", {
+        restaurantID: restaurant._id,
+        status: restaurant.status,
+        rejectionReason: restaurant.rejectionReason || "",
+      });
 
       response.status(200).json({
         message: "restaurant updated successfully!",

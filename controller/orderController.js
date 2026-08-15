@@ -3,6 +3,7 @@ const Cart = require("../model/cart");
 const Menu = require("../model/menu");
 const Order = require("../model/order");
 const User = require("../model/user");
+const { getIO } = require("../socket");
 
 const orderController = {
   placeOrder: async (request, response) => {
@@ -90,6 +91,11 @@ const orderController = {
       await user.save({ session });
 
       await session.commitTransaction();
+      const io = getIO();
+
+      io.to(`restaurant:${cart.restaurantId}`).emit("order:new", {
+        order: newOrder,
+      });
 
       response.status(201).json({
         message: "Order placed successfully.",

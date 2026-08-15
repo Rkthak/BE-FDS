@@ -3,6 +3,7 @@ const Restaurant = require("../model/restaurant");
 const User = require("../model/user");
 const generateSlug = require("../utils/generateSlug");
 const Menu = require("../model/menu");
+const { getIO } = require("../socket");
 
 const restaurantController = {
   createRestaurant: async (request, response) => {
@@ -51,6 +52,12 @@ const restaurantController = {
 
       const savedRestaurant = await newRestaurant.save();
 
+      const io = getIO();
+
+      io.to("admins").emit("restaurant:application:new", {
+        restaurant: savedRestaurant,
+      });
+
       const { __v, ...result } = savedRestaurant.toObject();
 
       response.status(201).json({
@@ -58,7 +65,7 @@ const restaurantController = {
         result,
       });
     } catch (error) {
-      response.status(500).json({
+      return response.status(500).json({
         message: "Error creating restaurant.",
         err: error.message,
       });
