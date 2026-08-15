@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const PORT = process.env.PORT;
-const HOST = process.env.HOST;
+const HOST = process.env.HOST || "0.0.0.0";
 const SALT_ROUNDS = process.env.SALT_ROUNDS;
 const ENV = process.env.ENV;
 const JWT_SECRET = process.env.JWT_SECRET;
