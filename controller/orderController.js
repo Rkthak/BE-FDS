@@ -51,14 +51,14 @@ const orderController = {
           await session.abortTransaction();
           return response
             .status(400)
-            .json({ message: "may be the dish is deleted" });
+            .json({ message: "may be some dish is deleted" });
         }
 
         if (!menu.isAvailable) {
           await session.abortTransaction();
           return response
             .status(400)
-            .json({ message: "dish is not available" });
+            .json({ message: "may be some dish is not available" });
         }
       }
 

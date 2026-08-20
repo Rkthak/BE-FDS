@@ -49,6 +49,12 @@ const authController = {
     try {
       const { email, password } = request.body;
 
+      if (!email?.trim() || !password) {
+        return response
+          .status(400)
+          .json({ message: "Email and password are required." });
+      }
+
       const existingUser = await User.findOne({ email });
 
       if (!existingUser) {
@@ -186,12 +192,10 @@ const authController = {
 
       await existingUser.save();
 
-      response
-        .status(200)
-        .json({
-          message: "profile image uploaded successfully",
-          user: existingUser,
-        });
+      response.status(200).json({
+        message: "profile image uploaded successfully",
+        user: existingUser,
+      });
     } catch (error) {
       response
         .status(500)

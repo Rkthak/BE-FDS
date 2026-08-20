@@ -23,7 +23,89 @@ const restaurantController = {
       const logo = request.files?.restaurantLogo?.[0];
       const banner = request.files?.restaurantBanner?.[0];
 
-      const existingPhoneNumber = await Restaurant.findOne({ phoneNumber });
+      // ================= BASIC VALIDATION =================
+
+      if (!restaurantName || !restaurantName.trim()) {
+        return response.status(400).json({
+          message: "Restaurant name is required.",
+        });
+      }
+
+      if (restaurantName.trim().length < 2) {
+        return response.status(400).json({
+          message: "Restaurant name must contain at least 2 characters.",
+        });
+      }
+
+      if (!phoneNumber || !/^[0-9]{10}$/.test(phoneNumber)) {
+        return response.status(400).json({
+          message: "Phone number must contain exactly 10 digits.",
+        });
+      }
+
+      if (!cuisine) {
+        return response.status(400).json({
+          message: "Cuisine is required.",
+        });
+      }
+
+      if (!address) {
+        return response.status(400).json({
+          message: "Address is required.",
+        });
+      }
+
+      if (!openingHours) {
+        return response.status(400).json({
+          message: "Opening hours are required.",
+        });
+      }
+
+      // ================= NUMERIC VALIDATION =================
+
+      if (
+        deliveryTime === undefined ||
+        deliveryTime === "" ||
+        Number(deliveryTime) <= 0
+      ) {
+        return response.status(400).json({
+          message: "Delivery time must be greater than 0.",
+        });
+      }
+
+      if (deliveryFee === undefined || Number(deliveryFee) < 0) {
+        return response.status(400).json({
+          message: "Delivery fee cannot be negative.",
+        });
+      }
+
+      if (minimumOrder === undefined || Number(minimumOrder) < 0) {
+        return response.status(400).json({
+          message: "Minimum order cannot be negative.",
+        });
+      }
+
+      // ================= JSON VALIDATION =================
+
+      let parsedCuisine;
+      let parsedAddress;
+      let parsedOpeningHours;
+
+      try {
+        parsedCuisine = JSON.parse(cuisine);
+        parsedAddress = JSON.parse(address);
+        parsedOpeningHours = JSON.parse(openingHours);
+      } catch (error) {
+        return response.status(400).json({
+          message: "Invalid restaurant data format.",
+        });
+      }
+
+      // ================= DUPLICATE PHONE =================
+
+      const existingPhoneNumber = await Restaurant.findOne({
+        phoneNumber,
+      });
 
       if (existingPhoneNumber) {
         return response.status(409).json({
@@ -32,18 +114,20 @@ const restaurantController = {
         });
       }
 
-      let slug = await generateSlug(restaurantName, Restaurant);
+      // ================= CREATE RESTAURANT =================
+
+      const slug = await generateSlug(restaurantName.trim(), Restaurant);
 
       const newRestaurant = new Restaurant({
-        restaurantName,
-        description,
+        restaurantName: restaurantName.trim(),
+        description: description?.trim() || "",
         phoneNumber,
-        cuisine: JSON.parse(cuisine),
-        address: JSON.parse(address),
-        openingHours: JSON.parse(openingHours),
-        deliveryTime,
-        deliveryFee,
-        minimumOrder,
+        cuisine: parsedCuisine,
+        address: parsedAddress,
+        openingHours: parsedOpeningHours,
+        deliveryTime: Number(deliveryTime),
+        deliveryFee: Number(deliveryFee),
+        minimumOrder: Number(minimumOrder),
         slug,
         logo: logo ? logo.path.replace(/\\/g, "/") : "",
         banner: banner ? banner.path.replace(/\\/g, "/") : "",
@@ -51,6 +135,8 @@ const restaurantController = {
       });
 
       const savedRestaurant = await newRestaurant.save();
+
+      // ================= SOCKET NOTIFICATION =================
 
       const io = getIO();
 
@@ -60,11 +146,28 @@ const restaurantController = {
 
       const { __v, ...result } = savedRestaurant.toObject();
 
-      response.status(201).json({
+      return response.status(201).json({
         message: "Restaurant registered successfully! Waiting for approval.",
         result,
       });
     } catch (error) {
+      // ================= MONGOOSE VALIDATION ERROR =================
+
+      if (error.name === "ValidationError") {
+        return response.status(400).json({
+          message: "Invalid restaurant data.",
+          errors: Object.values(error.errors).map((err) => err.message),
+        });
+      }
+
+      // ================= DUPLICATE KEY ERROR =================
+
+      if (error.code === 11000) {
+        return response.status(409).json({
+          message: "This restaurant data already exists.",
+        });
+      }
+
       return response.status(500).json({
         message: "Error creating restaurant.",
         err: error.message,
@@ -128,6 +231,50 @@ const restaurantController = {
         deliveryFee,
         minimumOrder,
       } = request.body;
+
+      // ================= VALIDATION =================
+
+      // Restaurant name
+      if (!restaurantName || restaurantName.trim().length < 2) {
+        return response.status(400).json({
+          message: "Restaurant name must contain at least 2 characters.",
+        });
+      }
+
+      // Phone number
+      if (!phoneNumber || !/^[0-9]{10}$/.test(String(phoneNumber))) {
+        return response.status(400).json({
+          message: "Phone number must contain exactly 10 digits.",
+        });
+      }
+
+      // Description
+      if (!description || description.trim().length < 10) {
+        return response.status(400).json({
+          message: "Description must contain at least 10 characters.",
+        });
+      }
+
+      // Delivery time
+      if (!deliveryTime || Number(deliveryTime) <= 0) {
+        return response.status(400).json({
+          message: "Delivery time must be greater than 0.",
+        });
+      }
+
+      // Delivery fee
+      if (deliveryFee === undefined || Number(deliveryFee) < 0) {
+        return response.status(400).json({
+          message: "Delivery fee cannot be negative.",
+        });
+      }
+
+      // Minimum order
+      if (minimumOrder === undefined || Number(minimumOrder) < 0) {
+        return response.status(400).json({
+          message: "Minimum order cannot be negative.",
+        });
+      }
 
       // Basic fields
       restaurant.restaurantName = restaurantName ?? restaurant.restaurantName;
@@ -353,6 +500,7 @@ const restaurantController = {
   updateMyRestaurant: async (request, response) => {
     try {
       const restaurant = request.restaurant;
+
       const {
         restaurantName,
         description,
@@ -366,6 +514,94 @@ const restaurantController = {
         isOpen,
       } = request.body;
 
+      // ================= VALIDATION =================
+
+      // Restaurant name
+      if (restaurantName !== undefined && restaurantName.trim().length < 2) {
+        return response.status(400).json({
+          message: "Restaurant name must contain at least 2 characters.",
+        });
+      }
+
+      // Phone number
+      if (
+        phoneNumber !== undefined &&
+        !/^[0-9]{10}$/.test(String(phoneNumber))
+      ) {
+        return response.status(400).json({
+          message: "Phone number must contain exactly 10 digits.",
+        });
+      }
+
+      // Description
+      if (description !== undefined && description.trim().length < 10) {
+        return response.status(400).json({
+          message: "Description must contain at least 10 characters.",
+        });
+      }
+
+      // Delivery time
+      if (deliveryTime !== undefined && Number(deliveryTime) <= 0) {
+        return response.status(400).json({
+          message: "Delivery time must be greater than 0.",
+        });
+      }
+
+      // Delivery fee
+      if (deliveryFee !== undefined && Number(deliveryFee) < 0) {
+        return response.status(400).json({
+          message: "Delivery fee cannot be negative.",
+        });
+      }
+
+      // Minimum order
+      if (minimumOrder !== undefined && Number(minimumOrder) < 0) {
+        return response.status(400).json({
+          message: "Minimum order cannot be negative.",
+        });
+      }
+
+      // Cuisine
+      if (
+        cuisine !== undefined &&
+        (!Array.isArray(cuisine) || cuisine.length === 0)
+      ) {
+        return response.status(400).json({
+          message: "At least one cuisine is required.",
+        });
+      }
+
+      // Address
+      if (address !== undefined) {
+        if (!address || typeof address !== "object") {
+          return response.status(400).json({
+            message: "Invalid address.",
+          });
+        }
+
+        // Pincode
+        if (
+          address.pincode !== undefined &&
+          !/^[0-9]{6}$/.test(String(address.pincode))
+        ) {
+          return response.status(400).json({
+            message: "Pincode must contain exactly 6 digits.",
+          });
+        }
+      }
+
+      // Opening hours
+      if (
+        openingHours !== undefined &&
+        (!openingHours || typeof openingHours !== "object")
+      ) {
+        return response.status(400).json({
+          message: "Invalid opening hours.",
+        });
+      }
+
+      // ================= UPDATE =================
+
       if (
         restaurantName &&
         restaurant.restaurantName !== restaurantName.trim()
@@ -378,15 +614,36 @@ const restaurantController = {
           restaurant._id,
         );
       }
-      restaurant.description = description ?? restaurant.description;
+
+      restaurant.description =
+        description !== undefined ? description.trim() : restaurant.description;
+
       restaurant.phoneNumber = phoneNumber ?? restaurant.phoneNumber;
+
       restaurant.cuisine = cuisine ?? restaurant.cuisine;
+
       restaurant.address = address ?? restaurant.address;
+
       restaurant.openingHours = openingHours ?? restaurant.openingHours;
-      restaurant.deliveryTime = deliveryTime ?? restaurant.deliveryTime;
-      restaurant.deliveryFee = deliveryFee ?? restaurant.deliveryFee;
-      restaurant.minimumOrder = minimumOrder ?? restaurant.minimumOrder;
+
+      restaurant.deliveryTime =
+        deliveryTime !== undefined
+          ? Number(deliveryTime)
+          : restaurant.deliveryTime;
+
+      restaurant.deliveryFee =
+        deliveryFee !== undefined
+          ? Number(deliveryFee)
+          : restaurant.deliveryFee;
+
+      restaurant.minimumOrder =
+        minimumOrder !== undefined
+          ? Number(minimumOrder)
+          : restaurant.minimumOrder;
+
       restaurant.isOpen = isOpen ?? restaurant.isOpen;
+
+      // ================= REJECTED → PENDING =================
 
       if (restaurant.status === "rejected") {
         restaurant.status = "pending";
@@ -394,13 +651,32 @@ const restaurantController = {
       }
 
       await restaurant.save();
-      response
-        .status(200)
-        .json({ message: "updated successfully", restaurant });
+
+      response.status(200).json({
+        message: "updated successfully",
+        restaurant,
+      });
     } catch (error) {
-      return response
-        .status(500)
-        .json({ message: "error updating restaurant", err: error.message });
+      // Duplicate phone number
+      if (error.code === 11000) {
+        return response.status(409).json({
+          message:
+            "Phone number is already registered with another restaurant.",
+        });
+      }
+
+      // Mongoose validation error
+      if (error.name === "ValidationError") {
+        return response.status(400).json({
+          message: "Invalid restaurant data.",
+          errors: Object.values(error.errors).map((err) => err.message),
+        });
+      }
+
+      return response.status(500).json({
+        message: "error updating restaurant",
+        err: error.message,
+      });
     }
   },
   deleteMyRestaurant: async (request, response) => {
