@@ -4,19 +4,25 @@ const User = require("../model/user");
 
 const auth = {
   isAuthenticated: async (request, response, next) => {
-    const token = request.cookies && request.cookies.token;
+    try {
+      const token = request.cookies?.token;
 
-    if (!token) {
+      if (!token) {
+        return response
+          .status(401)
+          .json({ message: "Please log in to continue." });
+      }
+
+      const decoded = jwt.verify(token, JWT_SECRET);
+
+      request.userID = decoded.userID;
+
+      next();
+    } catch (error) {
       return response
         .status(401)
-        .json({ message: "User is not authenticated" });
+        .json({ message: "Invalid or expired session. Please log in again." });
     }
-
-    const decoded = await jwt.verify(token, JWT_SECRET);
-
-    request.userID = decoded.userID;
-
-    next();
   },
   allowRoles: (roles) => {
     return async (request, response, next) => {

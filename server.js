@@ -8,7 +8,7 @@ mongoose
     console.log("mongodb connected");
 
     server
-      .listen(PORT, "0.0.0.0", () => {
+      .listen(PORT, HOST, () => {
         console.log("server listening ...");
       })
       .on("error", (err) => {
