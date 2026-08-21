@@ -209,6 +209,57 @@ const authController = {
       });
     }
   },
+  forgotPassword: async (request, response) => {
+    try {
+      const { email, newPassword, confirmPassword } = request.body;
+
+      if (!email || !newPassword || !confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Please fill in all fields.",
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Passwords do not match.",
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return response.status(400).json({
+          success: false,
+          message: "Password must be at least 6 characters long.",
+        });
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "No account found with this email.",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      user.password = hashedPassword;
+      await user.save();
+
+      return response.status(200).json({
+        success: true,
+        message: "Password updated successfully. Please login again.",
+      });
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: "Something went wrong while resetting your password.",
+      });
+    }
+  },
+
   deleteProfile: async (request, response) => {
     try {
       const userID = request.userID;
@@ -382,6 +433,144 @@ const authController = {
     } catch (error) {
       return response.status(500).json({
         message: "Failed to verify code. Please try again",
+      });
+    }
+  },
+  sendResetPasswordOTP: async (request, response) => {
+    try {
+      const { email } = request.body;
+
+      if (!email?.trim()) {
+        return response.status(400).json({
+          message: "Email is required.",
+        });
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return response.status(404).json({
+          message: "No account found with this email.",
+        });
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+      await User.findOneAndUpdate(
+        { email: email },
+        {
+          $set: {
+            resetPasswordOTP: otp,
+            resetPasswordOTPExpires: otpExpires,
+          },
+        },
+
+        { runValidators: false },
+      );
+
+      await transporter.sendMail({
+        from: EMAIL_USER,
+        to: user.email,
+        subject: "FoodRush Password Reset OTP",
+        html: `
+        <h2>FoodRush Password Reset</h2>
+        <p>Your password reset OTP is:</p>
+        <h1>${otp}</h1>
+        <p>This OTP will expire in 5 minutes.</p>
+      `,
+      });
+
+      return response.status(200).json({
+        message: "Password reset OTP sent successfully.",
+      });
+    } catch (error) {
+      console.log(error);
+
+      return response.status(500).json({
+        message: "Failed to send password reset OTP. Please try again later.",
+      });
+    }
+  },
+  resetPassword: async (request, response) => {
+    try {
+      const { email, otp, newPassword, confirmPassword } = request.body;
+
+      if (!email || !otp || !newPassword || !confirmPassword) {
+        return response.status(400).json({
+          message: "Please fill in all fields.",
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        return response.status(400).json({
+          message: "Passwords do not match.",
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return response.status(400).json({
+          message: "Password must be at least 6 characters long.",
+        });
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return response.status(404).json({
+          message: "No account found with this email.",
+        });
+      }
+
+      // OTP exist karta hai ya nahi
+      if (!user.resetPasswordOTP || !user.resetPasswordOTPExpires) {
+        return response.status(400).json({
+          message: "OTP not found. Please request a new OTP.",
+        });
+      }
+
+      // OTP expire hua ya nahi
+      if (user.resetPasswordOTPExpires < new Date()) {
+        return response.status(400).json({
+          message: "OTP has expired. Please request a new OTP.",
+        });
+      }
+
+      // OTP match
+      if (user.resetPasswordOTP !== otp) {
+        return response.status(400).json({
+          message: "Invalid OTP.",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(
+        newPassword,
+        Number(SALT_ROUNDS),
+      );
+
+      await User.findByIdAndUpdate(
+        user._id,
+        {
+          $set: {
+            password: hashedPassword,
+          },
+          $unset: {
+            resetPasswordOTP: "",
+            resetPasswordOTPExpires: "",
+          },
+        },
+        {
+          runValidators: false,
+        },
+      );
+
+      return response.status(200).json({
+        message: "Password updated successfully. Please login again.",
+      });
+    } catch (error) {
+      return response.status(500).json({
+        message: "Something went wrong while resetting your password.",
       });
     }
   },

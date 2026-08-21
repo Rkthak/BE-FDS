@@ -9,6 +9,9 @@ const {
   deleteProfile,
   verifyVerificationOTP,
   sendVerificationOTP,
+  forgotPassword,
+  sendResetPasswordOTP,
+  resetPassword,
 } = require("../controller/authController");
 const { isAuthenticated } = require("../middleware/auth");
 const upload = require("../middleware/uploadImage");
@@ -34,4 +37,8 @@ authRouter.post(
   isAuthenticated,
   verifyVerificationOTP,
 );
+
+// Forgot Password
+authRouter.post("/send-reset-password-otp", sendResetPasswordOTP);
+authRouter.post("/reset-password", resetPassword);
 module.exports = authRouter;
