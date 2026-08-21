@@ -84,7 +84,7 @@ const paymentController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error creating payment",
+        message: "error creating payment. try again",
         err: error.message,
       });
     }
@@ -245,7 +245,7 @@ const paymentController = {
       }
 
       response.status(500).json({
-        message: "Error verifying payment",
+        message: "Payment failed. Try again",
         err: error.message,
       });
     } finally {
@@ -273,7 +273,7 @@ const paymentController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error getting payment history",
+        message: "error getting payment history. wait for some time.",
         err: error.message,
       });
     }

@@ -50,7 +50,7 @@ const favoriteController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error updating favorite restaurant",
+        message: "Unable to update your favorite restaurant. Please try again.",
         err: error.message,
       });
     }
@@ -74,7 +74,7 @@ const favoriteController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error getting favorite restaurants.",
+        message: "Unable to load your favorite restaurants. Try again later",
         err: error.message,
       });
     }
@@ -116,9 +116,10 @@ const favoriteController = {
 
       response.status(200).json({ message: "menu added to favorites" });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error updating favorite menu", err: error.message });
+      response.status(500).json({
+        message: "Unable to update your favorite menu. Please try again.",
+        err: error.message,
+      });
     }
   },
   getFavoriteMenus: async (request, response) => {
@@ -142,9 +143,10 @@ const favoriteController = {
         favoriteFoods: user.favoriteFoods,
       });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error getting favorite menus", err: error.message });
+      response.status(500).json({
+        message: "Unable to load your favorite menus. Try again later",
+        err: error.message,
+      });
     }
   },
 };

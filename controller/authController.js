@@ -40,9 +40,10 @@ const authController = {
 
       response.status(201).json({ message: "user register successfull" });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error registering user.", err: error.message });
+      response.status(500).json({
+        message: "Unable to complete registration. Please try again later.",
+        err: error.message,
+      });
     }
   },
   login: async (request, response) => {
@@ -100,9 +101,11 @@ const authController = {
         },
       });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error login user", err: error.message });
+      response.status(500).json({
+        message:
+          "Something went wrong while logging in. Please try again later.",
+        err: error.message,
+      });
     }
   },
   me: async (request, response) => {
@@ -167,9 +170,11 @@ const authController = {
         .status(200)
         .json({ message: "user updated successfully!", user: existingUser });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error updating user", err: error.message });
+      response.status(500).json({
+        message:
+          "Something went wrong while updating profile. Please try again later.",
+        err: error.message,
+      });
       console.log(error);
     }
   },
@@ -197,9 +202,11 @@ const authController = {
         user: existingUser,
       });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error uploading profile image", err: error.message });
+      response.status(500).json({
+        message:
+          "Something went wrong while uploading profile image. Please try again later. ",
+        err: error.message,
+      });
     }
   },
   deleteProfile: async (request, response) => {
@@ -239,9 +246,11 @@ const authController = {
 
       response.status(200).json({ message: "profile deleted successfully" });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error deleting your account", err: error.message });
+      response.status(500).json({
+        message:
+          "Something went wrong while deleting your account. Please try again later.",
+        err: error.message,
+      });
     }
   },
   sendVerificationOTP: async (request, response) => {
@@ -305,7 +314,7 @@ const authController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "Failed to send verification OTP",
+        message: "Failed to send verification code. Please try again later",
       });
     }
   },
@@ -372,7 +381,7 @@ const authController = {
       });
     } catch (error) {
       return response.status(500).json({
-        message: "Failed to verify OTP",
+        message: "Failed to verify code. Please try again",
       });
     }
   },

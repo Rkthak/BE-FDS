@@ -104,7 +104,7 @@ const orderController = {
     } catch (error) {
       await session.abortTransaction();
       response.status(500).json({
-        message: "Error placing order.",
+        message: "Error placing order. Try again later",
         err: error.message,
       });
     } finally {
@@ -133,7 +133,7 @@ const orderController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error getting orders.",
+        message: "error getting orders. Try again later",
         err: error.message,
       });
     }
@@ -160,7 +160,7 @@ const orderController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error getting order.",
+        message: "Error getting order. Try again later",
         err: error.message,
       });
     }
@@ -196,7 +196,7 @@ const orderController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error cancelling order.",
+        message: "Error cancelling order. Try again later",
         err: error.message,
       });
     }
@@ -223,7 +223,7 @@ const orderController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error getting restaurant orders.",
+        message: "Error getting restaurant orders. Try again later",
         err: error.message,
       });
     }
@@ -252,7 +252,7 @@ const orderController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error getting order.",
+        message: "Error getting order. Try again later",
         err: error.message,
       });
     }
@@ -308,7 +308,7 @@ const orderController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error updating order status.",
+        message: "Error updating order status. Try again later",
         err: error.message,
       });
     }

@@ -575,7 +575,7 @@ const restaurantController = {
       if (address !== undefined) {
         if (!address || typeof address !== "object") {
           return response.status(400).json({
-            message: "Invalid address.",
+            message: "please provide a proper restaurant address",
           });
         }
 
@@ -596,7 +596,7 @@ const restaurantController = {
         (!openingHours || typeof openingHours !== "object")
       ) {
         return response.status(400).json({
-          message: "Invalid opening hours.",
+          message: "Invalid opening hours. Please check and try again.",
         });
       }
 
@@ -674,7 +674,7 @@ const restaurantController = {
       }
 
       return response.status(500).json({
-        message: "error updating restaurant",
+        message: "error updating restaurant. Try again later",
         err: error.message,
       });
     }
@@ -723,7 +723,10 @@ const restaurantController = {
       await session.abortTransaction();
       return response
         .status(500)
-        .json({ message: "error deleting restaurant", err: error.message });
+        .json({
+          message: "error deleting restaurant. Try again later",
+          err: error.message,
+        });
     } finally {
       session.endSession();
     }
@@ -748,7 +751,8 @@ const restaurantController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error uploading logo.",
+        message:
+          "error uploading logo. something went wrong on our side. Try after some times",
         err: error.message,
       });
     }
@@ -773,7 +777,8 @@ const restaurantController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error uploading banner.",
+        message:
+          "error uploading banner. something went wrong our side. Try after some times",
         err: error.message,
       });
     }

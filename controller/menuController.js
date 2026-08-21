@@ -190,7 +190,8 @@ const menuController = {
         });
       }
       return response.status(500).json({
-        message: "Error creating menu.",
+        message:
+          "Error creating menu item. Something went wrong on our side. Try again later",
         err: error.message,
       });
     }
@@ -224,7 +225,7 @@ const menuController = {
       response.status(200).json(menu);
     } catch (error) {
       response.status(500).json({
-        message: "error getting all menus",
+        message: "Error getting all menus. something went wrong from our side",
         err: error.message,
       });
     }
@@ -253,7 +254,7 @@ const menuController = {
       response.status(200).json(menu);
     } catch (error) {
       response.status(500).json({
-        message: "error getting menu",
+        message: "Error getting menu. Something went wrong from our side",
         err: error.message,
       });
     }
@@ -282,7 +283,8 @@ const menuController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error getting restaurant menus.",
+        message:
+          "error getting restaurant menus. something went wrong from our side",
         err: error.message,
       });
     }
@@ -306,7 +308,7 @@ const menuController = {
       response.status(200).json(menu);
     } catch (error) {
       response.status(500).json({
-        message: "error getting menu.",
+        message: "error getting menu.  something went wrong from our side",
         err: error.message,
       });
     }
@@ -327,7 +329,7 @@ const menuController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error getting your menu.",
+        message: "error getting your menu. something went wrong from our side",
         err: error.message,
       });
     }
@@ -351,7 +353,7 @@ const menuController = {
       response.status(200).json(menu);
     } catch (error) {
       response.status(500).json({
-        message: "error getting menu.",
+        message: "error getting menu. something went wrong from our side",
         err: error.message,
       });
     }
@@ -602,7 +604,7 @@ const menuController = {
         });
       }
       return response.status(500).json({
-        message: "Error updating menu.",
+        message: "Error updating menu. something went wrong from our side",
         err: error.message,
       });
     }
@@ -629,7 +631,7 @@ const menuController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error deleting menu.",
+        message: "error deleting menu. something went wrong from our side",
         err: error.message,
       });
     }
