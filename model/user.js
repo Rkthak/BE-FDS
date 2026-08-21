@@ -92,6 +92,16 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
+    verificationOTP: {
+      type: String,
+      default: null,
+    },
+
+    verificationOTPExpires: {
+      type: Date,
+      default: null,
+    },
+
     isVerified: {
       type: Boolean,
       default: false,
@@ -105,3 +115,5 @@ const userSchema = new mongoose.Schema(
 const User = mongoose.model("User", userSchema, "users");
 
 module.exports = User;
+
+// cwngremnhpyvvjjd

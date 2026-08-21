@@ -3,7 +3,7 @@ const Restaurant = require("../model/restaurant");
 const bcrypt = require("bcrypt");
 const { SALT_ROUNDS, JWT_SECRET, ENV } = require("../utils/config");
 const jwt = require("jsonwebtoken");
-const { response } = require("express");
+const transporter = require("../utils/mailer");
 
 const authController = {
   register: async (request, response) => {
@@ -242,6 +242,142 @@ const authController = {
       response
         .status(500)
         .json({ message: "error deleting your account", err: error.message });
+    }
+  },
+  sendVerificationOTP: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const user = await User.findById(userID);
+
+      if (!user) {
+        return response.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      if (user.isVerified) {
+        return response.status(400).json({
+          message: "Email is already verified",
+        });
+      }
+
+      // Generate 6 digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // OTP valid for 5 minutes
+      const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+      await User.findByIdAndUpdate(
+        userID,
+        {
+          $set: {
+            verificationOTP: otp,
+            verificationOTPExpires: otpExpires,
+          },
+        },
+
+        { runValidators: false },
+      );
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: "FoodRush Email Verification OTP",
+        html: `
+        <div style="font-family: Arial, sans-serif;">
+          <h2>FoodRush Email Verification</h2>
+          <p>Your verification OTP is:</p>
+
+          <h1 style="letter-spacing: 8px;">
+            ${otp}
+          </h1>
+
+          <p>This OTP will expire in 5 minutes.</p>
+
+          <p>If you did not request this, please ignore this email.</p>
+        </div>
+      `,
+      });
+
+      response.status(200).json({
+        message: "Verification OTP sent successfully",
+      });
+    } catch (error) {
+      console.error("Send verification OTP error:", error);
+
+      response.status(500).json({
+        message: "Failed to send verification OTP",
+      });
+    }
+  },
+  verifyVerificationOTP: async (request, response) => {
+    try {
+      const userID = request.userID;
+      const { otp } = request.body;
+
+      const user = await User.findById(userID);
+
+      if (!user) {
+        return response.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      if (user.isVerified) {
+        return response.status(400).json({
+          message: "Email is already verified",
+        });
+      }
+
+      if (!otp) {
+        return response.status(400).json({
+          message: "OTP is required",
+        });
+      }
+
+      if (!user.verificationOTP || !user.verificationOTPExpires) {
+        return response.status(400).json({
+          message: "OTP not found. Please request a new OTP",
+        });
+      }
+
+      if (user.verificationOTPExpires < new Date()) {
+        return response.status(400).json({
+          message: "OTP has expired",
+        });
+      }
+
+      if (user.verificationOTP !== otp) {
+        return response.status(400).json({
+          message: "Invalid OTP",
+        });
+      }
+
+      // OTP correct
+      await User.findByIdAndUpdate(
+        userID,
+        {
+          $set: {
+            isVerified: true,
+          },
+          $unset: {
+            verificationOTP: "",
+            verificationOTPExpires: "",
+          },
+        },
+        { runValidators: false },
+      );
+
+      return response.status(200).json({
+        message: "Email verified successfully",
+      });
+    } catch (error) {
+      console.error("Verify OTP error:", error);
+
+      return response.status(500).json({
+        message: "Failed to verify OTP",
+      });
     }
   },
 };

@@ -8,6 +8,8 @@ const ENV = process.env.ENV;
 const JWT_SECRET = process.env.JWT_SECRET;
 const RAZORPAY_TEST_API_KEY = process.env.RAZORPAY_TEST_API_KEY;
 const RAZORPAY_TEST_KEY_SECRET = process.env.RAZORPAY_TEST_KEY_SECRET;
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 module.exports = {
   MONGODB_URI,
   PORT,
@@ -17,4 +19,6 @@ module.exports = {
   JWT_SECRET,
   RAZORPAY_TEST_API_KEY,
   RAZORPAY_TEST_KEY_SECRET,
+  EMAIL_USER,
+  EMAIL_PASS,
 };
