@@ -1,7 +1,7 @@
 const User = require("../model/user");
 const Restaurant = require("../model/restaurant");
 const bcrypt = require("bcrypt");
-const { SALT_ROUNDS, JWT_SECRET, ENV } = require("../utils/config");
+const { SALT_ROUNDS, JWT_SECRET, ENV, EMAIL_USER } = require("../utils/config");
 const jwt = require("jsonwebtoken");
 const transporter = require("../utils/mailer");
 
@@ -281,7 +281,7 @@ const authController = {
       );
 
       await transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: EMAIL_USER,
         to: user.email,
         subject: "FoodRush Email Verification OTP",
         html: `
@@ -304,8 +304,6 @@ const authController = {
         message: "Verification OTP sent successfully",
       });
     } catch (error) {
-      console.error("Send verification OTP error:", error);
-
       response.status(500).json({
         message: "Failed to send verification OTP",
       });
@@ -373,8 +371,6 @@ const authController = {
         message: "Email verified successfully",
       });
     } catch (error) {
-      console.error("Verify OTP error:", error);
-
       return response.status(500).json({
         message: "Failed to verify OTP",
       });
