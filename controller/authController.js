@@ -1,9 +1,10 @@
 const User = require("../model/user");
 const Restaurant = require("../model/restaurant");
 const bcrypt = require("bcrypt");
-const { SALT_ROUNDS, JWT_SECRET, ENV, EMAIL_USER } = require("../utils/config");
+const { SALT_ROUNDS, JWT_SECRET, ENV } = require("../utils/config");
 const jwt = require("jsonwebtoken");
-const transporter = require("../utils/mailer");
+const sendOTP = require("../utils/mailer");
+const { generateOTP, getOTPExpiry } = require("../utils/otp");
 
 const authController = {
   register: async (request, response) => {
@@ -323,10 +324,10 @@ const authController = {
       }
 
       // Generate 6 digit OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otp = generateOTP();
 
       // OTP valid for 5 minutes
-      const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+      const otpExpires = getOTPExpiry();
 
       await User.findByIdAndUpdate(
         userID,
@@ -340,24 +341,12 @@ const authController = {
         { runValidators: false },
       );
 
-      await transporter.sendMail({
-        from: EMAIL_USER,
+      await sendOTP({
         to: user.email,
         subject: "FoodRush Email Verification OTP",
-        html: `
-        <div style="font-family: Arial, sans-serif;">
-          <h2>FoodRush Email Verification</h2>
-          <p>Your verification OTP is:</p>
-
-          <h1 style="letter-spacing: 8px;">
-            ${otp}
-          </h1>
-
-          <p>This OTP will expire in 5 minutes.</p>
-
-          <p>If you did not request this, please ignore this email.</p>
-        </div>
-      `,
+        title: "FoodRush Email Verification",
+        message: "Your verification OTP is:",
+        otp: otp,
       });
 
       response.status(200).json({
@@ -454,9 +443,9 @@ const authController = {
         });
       }
 
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otp = generateOTP();
 
-      const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+      const otpExpires = getOTPExpiry();
 
       await User.findOneAndUpdate(
         { email: email },
@@ -470,16 +459,12 @@ const authController = {
         { runValidators: false },
       );
 
-      await transporter.sendMail({
-        from: EMAIL_USER,
+      await sendOTP({
         to: user.email,
         subject: "FoodRush Password Reset OTP",
-        html: `
-        <h2>FoodRush Password Reset</h2>
-        <p>Your password reset OTP is:</p>
-        <h1>${otp}</h1>
-        <p>This OTP will expire in 5 minutes.</p>
-      `,
+        title: "FoodRush Password Reset",
+        message: "Your password reset OTP is:",
+        otp,
       });
 
       return response.status(200).json({
