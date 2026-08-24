@@ -439,7 +439,10 @@ const restaurantController = {
       }
 
       if (location) {
-        restaurantQuery["address.city"] = location;
+        restaurantQuery["address.city"] = {
+          $regex: location.trim(),
+          $options: "i",
+        };
       }
 
       if (cuisine) {
@@ -721,12 +724,10 @@ const restaurantController = {
       });
     } catch (error) {
       await session.abortTransaction();
-      return response
-        .status(500)
-        .json({
-          message: "error deleting restaurant. Try again later",
-          err: error.message,
-        });
+      return response.status(500).json({
+        message: "error deleting restaurant. Try again later",
+        err: error.message,
+      });
     } finally {
       session.endSession();
     }
