@@ -4,6 +4,7 @@ const User = require("../model/user");
 const generateSlug = require("../utils/generateSlug");
 const Menu = require("../model/menu");
 const { getIO } = require("../socket");
+const Review = require("../model/review");
 
 const restaurantController = {
   createRestaurant: async (request, response) => {
@@ -781,6 +782,25 @@ const restaurantController = {
         message:
           "error uploading banner. something went wrong our side. Try after some times",
         err: error.message,
+      });
+    }
+  },
+  // Get my restaurant reviews
+  getMyRestaurantReviews: async (request, response) => {
+    try {
+      const reviews = await Review.find({
+        restaurantId: request.restaurant._id,
+        status: "approved",
+      })
+        .populate("userId", "userName email")
+        .sort({ createdAt: -1 });
+
+      return response.status(200).json({
+        reviews,
+      });
+    } catch (error) {
+      return response.status(500).json({
+        message: "Failed to get restaurant reviews",
       });
     }
   },

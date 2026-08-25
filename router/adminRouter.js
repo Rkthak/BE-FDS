@@ -7,6 +7,10 @@ const {
   deleteRestaurant,
   updateRestaurant,
 } = require("../controller/adminController");
+const {
+  getAllReviews,
+  moderateReview,
+} = require("../controller/reviewController");
 
 const adminRouter = express.Router();
 
@@ -19,5 +23,13 @@ adminRouter.get("/restaurant/:restaurantID", getRestaurantsByID);
 adminRouter.delete("/restaurant/:restaurantID", deleteRestaurant);
 adminRouter.put("/restaurant/:restaurantID", updateRestaurant);
 adminRouter.patch("/restaurant/:restaurantID/status", approveRestaurant);
+
+// ==================== REVIEWS ====================
+
+// Get all reviews
+adminRouter.get("/review", getAllReviews);
+
+// Approve / reject review
+adminRouter.patch("/review/:reviewId/moderate", moderateReview);
 
 module.exports = adminRouter;

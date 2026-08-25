@@ -13,6 +13,7 @@ const {
   searchRestaurantByFilters,
   getMyRestaurantApplication,
   updateMyRestaurantApplication,
+  getMyRestaurantReviews,
 } = require("../controller/restaurantController");
 const upload = require("../middleware/uploadImage");
 const isMyRestaurant = require("../middleware/isMyRestaurant");
@@ -92,6 +93,13 @@ restaurantRouter.put(
   isMyRestaurant,
   upload.single("restaurantBanner"),
   uploadBanner,
+);
+restaurantRouter.get(
+  "/my/:slugID/reviews",
+  isAuthenticated,
+  allowRoles(["restaurant"]),
+  isMyRestaurant,
+  getMyRestaurantReviews,
 );
 
 // public routes
