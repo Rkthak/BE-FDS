@@ -19,7 +19,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://foodrush-fds.netlify.app",
     credentials: true,
   },
 });
@@ -55,7 +55,7 @@ io.on("connection", (socket) => {
 app.use("/uploads", express.static("uploads"));
 app.use(
   cors({
-    origin: "http://localhost:5173", // replace with your frontend URL
+    origin: "https://foodrush-fds.netlify.app", // replace with your frontend URL
     credentials: true, // allow cookies to be sent
   }),
 );
