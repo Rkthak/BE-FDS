@@ -3,7 +3,8 @@ const Restaurant = require("../model/restaurant");
 const bcrypt = require("bcrypt");
 const { SALT_ROUNDS, JWT_SECRET, ENV } = require("../utils/config");
 const jwt = require("jsonwebtoken");
-const { response } = require("express");
+const sendOTP = require("../utils/mailer");
+const { generateOTP, getOTPExpiry } = require("../utils/otp");
 
 const authController = {
   register: async (request, response) => {
@@ -40,14 +41,21 @@ const authController = {
 
       response.status(201).json({ message: "user register successfull" });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error registering user.", err: error.message });
+      response.status(500).json({
+        message: "Unable to complete registration. Please try again later.",
+        err: error.message,
+      });
     }
   },
   login: async (request, response) => {
     try {
       const { email, password } = request.body;
+
+      if (!email?.trim() || !password) {
+        return response
+          .status(400)
+          .json({ message: "Email and password are required." });
+      }
 
       const existingUser = await User.findOne({ email });
 
@@ -94,9 +102,11 @@ const authController = {
         },
       });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error login user", err: error.message });
+      response.status(500).json({
+        message:
+          "Something went wrong while logging in. Please try again later.",
+        err: error.message,
+      });
     }
   },
   me: async (request, response) => {
@@ -161,9 +171,11 @@ const authController = {
         .status(200)
         .json({ message: "user updated successfully!", user: existingUser });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error updating user", err: error.message });
+      response.status(500).json({
+        message:
+          "Something went wrong while updating profile. Please try again later.",
+        err: error.message,
+      });
       console.log(error);
     }
   },
@@ -186,18 +198,69 @@ const authController = {
 
       await existingUser.save();
 
-      response
-        .status(200)
-        .json({
-          message: "profile image uploaded successfully",
-          user: existingUser,
-        });
+      response.status(200).json({
+        message: "profile image uploaded successfully",
+        user: existingUser,
+      });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error uploading profile image", err: error.message });
+      response.status(500).json({
+        message:
+          "Something went wrong while uploading profile image. Please try again later. ",
+        err: error.message,
+      });
     }
   },
+  forgotPassword: async (request, response) => {
+    try {
+      const { email, newPassword, confirmPassword } = request.body;
+
+      if (!email || !newPassword || !confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Please fill in all fields.",
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Passwords do not match.",
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return response.status(400).json({
+          success: false,
+          message: "Password must be at least 6 characters long.",
+        });
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "No account found with this email.",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      user.password = hashedPassword;
+      await user.save();
+
+      return response.status(200).json({
+        success: true,
+        message: "Password updated successfully. Please login again.",
+      });
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: "Something went wrong while resetting your password.",
+      });
+    }
+  },
+
   deleteProfile: async (request, response) => {
     try {
       const userID = request.userID;
@@ -235,9 +298,265 @@ const authController = {
 
       response.status(200).json({ message: "profile deleted successfully" });
     } catch (error) {
-      response
-        .status(500)
-        .json({ message: "error deleting your account", err: error.message });
+      response.status(500).json({
+        message:
+          "Something went wrong while deleting your account. Please try again later.",
+        err: error.message,
+      });
+    }
+  },
+  sendVerificationOTP: async (request, response) => {
+    try {
+      const userID = request.userID;
+
+      const user = await User.findById(userID);
+
+      if (!user) {
+        return response.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      if (user.isVerified) {
+        return response.status(400).json({
+          message: "Email is already verified",
+        });
+      }
+
+      // Generate 6 digit OTP
+      const otp = generateOTP();
+
+      // OTP valid for 5 minutes
+      const otpExpires = getOTPExpiry();
+
+      await User.findByIdAndUpdate(
+        userID,
+        {
+          $set: {
+            verificationOTP: otp,
+            verificationOTPExpires: otpExpires,
+          },
+        },
+
+        { runValidators: false },
+      );
+
+      await sendOTP({
+        to: user.email,
+        subject: "FoodRush Email Verification OTP",
+        title: "FoodRush Email Verification",
+        message: "Your verification OTP is:",
+        otp: otp,
+      });
+
+      response.status(200).json({
+        message: "Verification OTP sent successfully",
+      });
+    } catch (error) {
+      response.status(500).json({
+        message: "Failed to send verification code. Please try again later",
+      });
+    }
+  },
+  verifyVerificationOTP: async (request, response) => {
+    try {
+      const userID = request.userID;
+      const { otp } = request.body;
+
+      const user = await User.findById(userID);
+
+      if (!user) {
+        return response.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      if (user.isVerified) {
+        return response.status(400).json({
+          message: "Email is already verified",
+        });
+      }
+
+      if (!otp) {
+        return response.status(400).json({
+          message: "OTP is required",
+        });
+      }
+
+      if (!user.verificationOTP || !user.verificationOTPExpires) {
+        return response.status(400).json({
+          message: "OTP not found. Please request a new OTP",
+        });
+      }
+
+      if (user.verificationOTPExpires < new Date()) {
+        return response.status(400).json({
+          message: "OTP has expired",
+        });
+      }
+
+      if (user.verificationOTP !== otp) {
+        return response.status(400).json({
+          message: "Invalid OTP",
+        });
+      }
+
+      // OTP correct
+      await User.findByIdAndUpdate(
+        userID,
+        {
+          $set: {
+            isVerified: true,
+          },
+          $unset: {
+            verificationOTP: "",
+            verificationOTPExpires: "",
+          },
+        },
+        { runValidators: false },
+      );
+
+      return response.status(200).json({
+        message: "Email verified successfully",
+      });
+    } catch (error) {
+      return response.status(500).json({
+        message: "Failed to verify code. Please try again",
+      });
+    }
+  },
+  sendResetPasswordOTP: async (request, response) => {
+    try {
+      const { email } = request.body;
+
+      if (!email?.trim()) {
+        return response.status(400).json({
+          message: "Email is required.",
+        });
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return response.status(404).json({
+          message: "No account found with this email.",
+        });
+      }
+
+      const otp = generateOTP();
+
+      const otpExpires = getOTPExpiry();
+
+      await User.findOneAndUpdate(
+        { email: email },
+        {
+          $set: {
+            resetPasswordOTP: otp,
+            resetPasswordOTPExpires: otpExpires,
+          },
+        },
+
+        { runValidators: false },
+      );
+
+      await sendOTP({
+        to: user.email,
+        subject: "FoodRush Password Reset OTP",
+        title: "FoodRush Password Reset",
+        message: "Your password reset OTP is:",
+        otp,
+      });
+
+      return response.status(200).json({
+        message: "Password reset OTP sent successfully.",
+      });
+    } catch (error) {
+      console.log(error);
+
+      return response.status(500).json({
+        message: "Failed to send password reset OTP. Please try again later.",
+      });
+    }
+  },
+  resetPassword: async (request, response) => {
+    try {
+      const { email, otp, newPassword, confirmPassword } = request.body;
+
+      if (!email || !otp || !newPassword || !confirmPassword) {
+        return response.status(400).json({
+          message: "Please fill in all fields.",
+        });
+      }
+
+      if (newPassword !== confirmPassword) {
+        return response.status(400).json({
+          message: "Passwords do not match.",
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return response.status(400).json({
+          message: "Password must be at least 6 characters long.",
+        });
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return response.status(404).json({
+          message: "No account found with this email.",
+        });
+      }
+
+      // OTP exist karta hai ya nahi
+      if (!user.resetPasswordOTP || !user.resetPasswordOTPExpires) {
+        return response.status(400).json({
+          message: "OTP not found. Please request a new OTP.",
+        });
+      }
+
+      // OTP expire hua ya nahi
+      if (user.resetPasswordOTPExpires < new Date()) {
+        return response.status(400).json({
+          message: "OTP has expired. Please request a new OTP.",
+        });
+      }
+
+      // OTP match
+      if (user.resetPasswordOTP !== otp) {
+        return response.status(400).json({
+          message: "Invalid OTP.",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(
+        newPassword,
+        Number(SALT_ROUNDS),
+      );
+
+      await User.findByIdAndUpdate(
+        user._id,
+        {
+          $set: {
+            password: hashedPassword,
+          },
+          $unset: {
+            resetPasswordOTP: "",
+            resetPasswordOTPExpires: "",
+          },
+        },
+        {
+          runValidators: false,
+        },
+      );
+
+      return response.status(200).json({
+        message: "Password updated successfully. Please login again.",
+      });
+    } catch (error) {
+      return response.status(500).json({
+        message: "Something went wrong while resetting your password.",
+      });
     }
   },
 };

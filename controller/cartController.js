@@ -217,7 +217,7 @@ const cartController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error removing item",
+        message: "error removing item form cart",
         err: error.message,
       });
     }
@@ -236,7 +236,7 @@ const cartController = {
       });
     } catch (error) {
       response.status(500).json({
-        message: "error clearing cart",
+        message: "error clearing cart. Please try again",
         err: error.message,
       });
     }

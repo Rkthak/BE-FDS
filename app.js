@@ -13,6 +13,7 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 const { initSocket } = require("./socket");
+const reviewRouter = require("./router/reviewRouter");
 
 const server = http.createServer(app);
 
@@ -69,6 +70,7 @@ app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/order", orderRouter);
 app.use("/api/v1/payment", paymentRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 module.exports = {
   app,
