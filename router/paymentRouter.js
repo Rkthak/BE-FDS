@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuthenticated } = require("../middleware/auth");
+const { isAuthenticated, allowRoles } = require("../middleware/auth");
 const {
   createPayment,
   verifyPayment,
@@ -8,8 +8,18 @@ const {
 
 const paymentRouter = express.Router();
 
-paymentRouter.post("/create", isAuthenticated, createPayment);
-paymentRouter.post("/verify", isAuthenticated, verifyPayment);
-paymentRouter.get("/my", isAuthenticated, getMyPayments);
+paymentRouter.post(
+  "/create",
+  isAuthenticated,
+  allowRoles(["user"]),
+  createPayment,
+);
+paymentRouter.post(
+  "/verify",
+  isAuthenticated,
+  allowRoles(["user"]),
+  verifyPayment,
+);
+paymentRouter.get("/my", isAuthenticated, allowRoles(["user"]), getMyPayments);
 
 module.exports = paymentRouter;

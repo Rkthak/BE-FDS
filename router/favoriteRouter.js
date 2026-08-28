@@ -1,5 +1,5 @@
 const express = require("express");
-const { isAuthenticated } = require("../middleware/auth");
+const { isAuthenticated, allowRoles } = require("../middleware/auth");
 const {
   getFavoriteRestaurants,
   updateFavoriteRestaurant,
@@ -13,12 +13,28 @@ const favoriteRouter = express.Router();
 favoriteRouter.patch(
   "/restaurant/:restaurantID",
   isAuthenticated,
+  allowRoles(["user"]),
   updateFavoriteRestaurant,
 );
 
-favoriteRouter.get("/restaurant", isAuthenticated, getFavoriteRestaurants);
+favoriteRouter.get(
+  "/restaurant",
+  isAuthenticated,
+  allowRoles(["user"]),
+  getFavoriteRestaurants,
+);
 
-favoriteRouter.patch("/menu/:menuID", isAuthenticated, updateFavoriteMenu);
-favoriteRouter.get("/menu/", isAuthenticated, getFavoriteMenus);
+favoriteRouter.patch(
+  "/menu/:menuID",
+  isAuthenticated,
+  allowRoles(["user"]),
+  updateFavoriteMenu,
+);
+favoriteRouter.get(
+  "/menu/",
+  isAuthenticated,
+  allowRoles(["user"]),
+  getFavoriteMenus,
+);
 
 module.exports = favoriteRouter;

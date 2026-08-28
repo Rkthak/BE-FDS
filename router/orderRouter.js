@@ -38,12 +38,22 @@ orderRouter.patch(
   updateOrderStatus,
 );
 
-orderRouter.post("/", isAuthenticated, placeOrder);
+orderRouter.post("/", isAuthenticated, allowRoles(["user"]), placeOrder);
 
-orderRouter.get("/my", isAuthenticated, getMyOrders);
+orderRouter.get("/my", isAuthenticated, allowRoles(["user"]), getMyOrders);
 
-orderRouter.get("/:orderID", isAuthenticated, getOrderById);
+orderRouter.get(
+  "/:orderID",
+  isAuthenticated,
+  allowRoles(["user"]),
+  getOrderById,
+);
 
-orderRouter.patch("/:orderID/cancel", isAuthenticated, cancelOrder);
+orderRouter.patch(
+  "/:orderID/cancel",
+  isAuthenticated,
+  allowRoles(["user"]),
+  cancelOrder,
+);
 
 module.exports = orderRouter;
