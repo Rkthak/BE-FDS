@@ -40,11 +40,13 @@ restaurantRouter.post(
 restaurantRouter.get(
   "/my-application",
   isAuthenticated,
+  allowRoles(["user", "restaurant"]),
   getMyRestaurantApplication,
 );
 restaurantRouter.put(
   "/my-application",
   isAuthenticated,
+  allowRoles(["user", "restaurant"]),
   upload.fields([
     {
       name: "restaurantLogo",
@@ -57,7 +59,12 @@ restaurantRouter.put(
   ]),
   updateMyRestaurantApplication,
 );
-restaurantRouter.get("/my", isAuthenticated, getMyRestaurant);
+restaurantRouter.get(
+  "/my",
+  isAuthenticated,
+  allowRoles(["user", "restaurant"]),
+  getMyRestaurant,
+);
 restaurantRouter.get(
   "/my/:slugID",
   isAuthenticated,
