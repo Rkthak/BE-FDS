@@ -1,55 +1,30 @@
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../utils/cloudinary");
 
-// create upload directories
-const createUploadsDir = () => {
-  const uploadDirs = [
-    "uploads",
-    "uploads/users",
-    "uploads/logos",
-    "uploads/banners",
-    "uploads/menus",
-  ];
-
-  uploadDirs.forEach((dir) => {
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-  });
-};
-
-createUploadsDir();
-
-// multer storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let uploadPath = "uploads/";
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    let folder;
 
     if (file.fieldname === "profileImage") {
-      uploadPath += "users/";
+      folder = "foodrush/users";
     } else if (file.fieldname === "restaurantBanner") {
-      uploadPath += "banners/";
+      folder = "foodrush/banners";
     } else if (file.fieldname === "restaurantLogo") {
-      uploadPath += "logos/";
+      folder = "foodrush/logos";
     } else if (file.fieldname === "menuImage") {
-      uploadPath += "menus/";
+      folder = "foodrush/menus";
+    } else {
+      throw new Error("Invalid image field name.");
     }
 
-    cb(null, uploadPath);
-  },
-
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
-    );
+    return {
+      folder,
+    };
   },
 });
 
-// file validation
 const fileFilter = (req, file, cb) => {
   const allowedFields = [
     "profileImage",
@@ -72,9 +47,8 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
