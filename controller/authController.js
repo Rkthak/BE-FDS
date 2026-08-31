@@ -42,7 +42,8 @@ const authController = {
       response.status(201).json({ message: "user register successfull" });
     } catch (error) {
       response.status(500).json({
-        message: "Unable to complete registration. Please try again later.",
+        message:
+          "Registration failed due to a server error. Please try again later or contact support if the problem persists.",
         err: error.message,
       });
     }
