@@ -26,7 +26,10 @@ const authController = {
       const existingUser = await User.findOne({ email });
 
       if (existingUser) {
-        return response.status(409).json({ message: "user already exists" });
+        return response.status(409).json({
+          message:
+            "An account with this email already exists. Please log in or use a different email address.",
+        });
       }
 
       const hashedPassword = await bcrypt.hash(password, Number(SALT_ROUNDS));
@@ -43,7 +46,7 @@ const authController = {
     } catch (error) {
       response.status(500).json({
         message:
-          "Registration failed due to a server error. Please try again later or contact support if the problem persists.",
+          "We couldn't create your account because something went wrong on our server. Please try again in a few moments.",
         err: error.message,
       });
     }
